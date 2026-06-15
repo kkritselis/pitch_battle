@@ -4,6 +4,7 @@
 #include <DNSServer.h>
 #include <qrcode.h>
 #include "config.h"
+#include "ipixel.h"
 
 #if ENABLE_LCD
   #include <Arduino_GFX_Library.h>
@@ -289,20 +290,6 @@ void checkResolve() {
   }
 }
 
-void showIPixelResult(String imageName) {
-  if (imageName == "homerun") {
-    // send BLE frame for home run image
-  } else if (imageName == "strike") {
-    // send BLE frame for strike image
-  } else if (imageName == "single") {
-    // send BLE frame for single image
-  } else if (imageName == "out") {
-    // send BLE frame for out image
-  } else {
-    // send default waiting image
-  }
-}
-
 String getStateJson() {
   String json = "{";
   json += "\"pitchLocked\":" + String(pitchLocked ? "true" : "false") + ",";
@@ -383,7 +370,13 @@ void handleState() {
 
 void setup() {
   Serial.begin(115200);
-  delay(500);
+  delay(1500);
+  Serial.println();
+  Serial.println("Pitch Battle booting...");
+  Serial.flush();
+
+  // Start BLE before LCD init so scanning begins as early as possible.
+  ipixelBegin();
 
 #if ENABLE_LCD
   gfx->begin();
@@ -394,11 +387,31 @@ void setup() {
   }
 
   gfx->fillScreen(BLACK);
-  drawCenteredText("Booting...", 110, WHITE, 2);
+  if (ipixelLogoDisplayed()) {
+    drawCenteredText("iPixel connected", 70, GREEN, 1);
+  } else {
+    drawCenteredText("iPixel not found", 70, YELLOW, 1);
+    drawCenteredText("will retry...", 88, WHITE, 1);
+  }
+
+  char seenLine[24];
+  snprintf(seenLine, sizeof(seenLine), "BLE devices: %u", ipixelDevicesSeen());
+  drawCenteredText(seenLine, 112, CYAN, 1);
+
+  const char *addr = ipixelAddress();
+  if (addr[0] != '\0') {
+    drawCenteredText("iPixel address:", 140, WHITE, 1);
+    drawCenteredText(addr, 156, YELLOW, 1);
+    // Hold long enough to read or photograph the address.
+    delay(8000);
+  } else {
+    delay(1500);
+  }
 #endif
 
   WiFi.mode(WIFI_AP);
   WiFi.softAP(AP_SSID, AP_PASSWORD);
+  ipixelNotifyWifiActive();
 
   delay(300);
 
@@ -459,4 +472,5 @@ void setup() {
 void loop() {
   dnsServer.processNextRequest();
   server.handleClient();
+  ipixelLoop();
 }
