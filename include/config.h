@@ -29,7 +29,8 @@
 #define IPIXEL_DEVICE_PREFIX "LED_BLE_"
 // Leave empty unless your display uses a different advertised name.
 #define IPIXEL_ALT_PREFIX ""
-#define IPIXEL_MAC ""
+// Pinned to this unit (LED_BLE_2D84B28A) for direct connect; clear to scan.
+#define IPIXEL_MAC "08:bf:2d:84:b2:8a"
 
 // How long each BLE scan pass runs.
 #define IPIXEL_SCAN_SECONDS 8

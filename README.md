@@ -318,7 +318,7 @@ Watch the round LCD line `BLE devices: N` during boot. That count is the key dia
 
 ## Roadmap
 
-### Phase 1 — iPixel BLE on ESP32 (implemented, needs hardware test)
+### Phase 1 — iPixel BLE on ESP32 (complete)
 
 - [x] Add NimBLE-Arduino to `platformio.ini`
 - [x] Scan for and connect to the iPixel on boot
@@ -326,18 +326,41 @@ Watch the round LCD line `BLE devices: N` during boot. That count is the key dia
 - [x] Implement `showIPixelResult()` using the slot display command
 - [x] Show slot 10 (logo) at startup
 
-**Done when:** Logo appears on the iPixel automatically after ESP32 boot, with no Mac involved.
+**Done:** Logo appears on the iPixel automatically after ESP32 boot, with no Mac involved.
 
-### Phase 2 — Result animations
+Key findings from bring-up:
+
+- The display only accepts **write-without-response** on `fa02`. NimBLE's
+  `canWriteNoResponse()` reports false for this device, so the firmware calls the
+  host `ble_gattc_write_no_rsp_flat()` directly.
+- The display does **not** return notify ACKs for the boot commands, so the
+  handshake and slot commands are fire-and-forget with short delays.
+- `Serial` is routed to USB via `ARDUINO_USB_MODE=1` and
+  `ARDUINO_USB_CDC_ON_BOOT=1` in `platformio.ini` for boot logging.
+- The target unit (`LED_BLE_2D84B28A`) is pinned by address in
+  `IPIXEL_MAC` (`config.h`) for direct connect; clear it to scan by name.
+- The ESP32-C3-MINI-1U needs its external U.FL antenna for reliable range;
+  without it, connect close to the display.
+
+### Phase 2 — Result animations (complete)
 
 Wire play resolution to the correct iPixel slots.
 
-- Map `currentImage` and `resultText` outcomes to slots 1–8
-- Trigger the animation immediately after `resolvePlay()` completes
-- Add a "Next pitch" button in the web UI that calls `/api/reset`
-- Fix pitch/swing status responses so the UI does not flash raw JSON
+- [x] `resolvePlay()` returns a structured `PlayResult` (text + image token),
+      replacing fragile string matching
+- [x] Map outcomes to slots: homerun, double, single, foul, strike, flyout
+- [x] Trigger the animation immediately after `resolvePlay()` completes
+- [x] Add a "Next pitch" button in the web UI that calls `/api/reset`
+- [x] Parse JSON responses on the client so the UI no longer flashes raw JSON;
+      show the result and a clean status line, and hide controls once resolved
 
-**Done when:** A full pitch-and-swing cycle updates both phones and the iPixel without manual reset via serial or curl.
+**Done:** A full pitch-and-swing cycle updates both phones and the iPixel, and
+"Next pitch" resets for the next at-bat — no serial or curl needed.
+
+Notes:
+
+- `triple` and `walk` slots are mapped in `showIPixelResult()` but not yet
+  produced by `resolvePlay()`; they are reserved for Phase 5 rules.
 
 ### Phase 3 — Scoreboard state
 

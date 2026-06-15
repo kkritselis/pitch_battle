@@ -277,9 +277,12 @@ static bool ipixelSendCommand(const uint8_t *data, size_t length, bool waitForAc
   ipixelAckReceived = false;
   ipixelAckPending = waitForAck;
 
-  // iPixel firmware only accepts write-without-response on fa02; command ACKs
-  // arrive separately over the fa03 notify channel. NimBLE's canWriteNoResponse()
-  // is unreliable for this device, so call the host write-no-response directly.
+  // This display's fa02 only accepts write-without-response (response writes are
+  // rejected by the device). NimBLE's canWriteNoResponse() is unreliable here,
+  // so call the host write-no-response directly. Note: these writes have no flow
+  // control, so when Wi-Fi is also using the single radio (especially without
+  // the external antenna) the packets can be silently dropped before reaching
+  // the display -- this is the current gameplay limitation.
   const uint16_t connId = ipixelClient->getConnId();
   const uint16_t handle = ipixelWriteChar->getHandle();
   const int rc = ble_gattc_write_no_rsp_flat(connId, handle, data, length);
@@ -311,6 +314,9 @@ static bool ipixelSendDeviceInfo() {
 }
 
 static bool ipixelSendSlotCommand(uint8_t slot) {
+  // Matches pypixelcolor show_slot(): [0x07,0x00,0x08,0x80,0x01,0x00,slot].
+  // Note: if the requested slot is empty the device falls back to cycling
+  // through whatever slots are populated.
   const uint8_t cmd[] = {0x07, 0x00, 0x08, 0x80, 0x01, 0x00, slot};
   return ipixelSendCommand(cmd, sizeof(cmd), false);
 }
@@ -537,17 +543,39 @@ void showIPixelResult(const String &imageName) {
 
   if (imageName == "homerun") {
     slot = IPIXEL_SLOT_HOMERUN;
-  } else if (imageName == "strike") {
-    slot = IPIXEL_SLOT_BALL;
+  } else if (imageName == "triple") {
+    slot = IPIXEL_SLOT_TRIPLE;
+  } else if (imageName == "double") {
+    slot = IPIXEL_SLOT_DOUBLE;
   } else if (imageName == "single") {
     slot = IPIXEL_SLOT_SINGLE;
-  } else if (imageName == "out") {
-    slot = IPIXEL_SLOT_FLYOUT;
-  } else if (imageName == "contact") {
+  } else if (imageName == "walk") {
+    slot = IPIXEL_SLOT_WALK;
+  } else if (imageName == "strike") {
+    slot = IPIXEL_SLOT_BALL;
+  } else if (imageName == "foul") {
     slot = IPIXEL_SLOT_FOUL;
+  } else if (imageName == "flyout" || imageName == "out") {
+    slot = IPIXEL_SLOT_FLYOUT;
   }
 
-  ipixelShowSlot(slot);
+  Serial.print("iPixel result '");
+  Serial.print(imageName);
+  Serial.print("' -> slot ");
+  Serial.println(slot);
+
+  // After idle time (and with Wi-Fi competing for the radio) the display tends
+  // to drop back to autonomously looping its stored animations. Re-assert host
+  // control with the device-info handshake, then send the slot command a few
+  // times since write-without-response packets can be silently dropped on a
+  // busy or weak BLE link.
+  ipixelSendDeviceInfo();
+  delay(120);
+
+  for (int attempt = 0; attempt < 3; attempt++) {
+    ipixelShowSlot(slot);
+    delay(120);
+  }
 }
 
 #endif

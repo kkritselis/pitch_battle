@@ -37,6 +37,13 @@ String swingValue = "";
 String resultText = "";
 String currentImage = "waiting";
 
+// Outcome of a resolved play: the text shown on the phones and the image token
+// used to pick an iPixel animation slot (see showIPixelResult).
+struct PlayResult {
+  String text;
+  String image;
+};
+
 String pageHtml() {
   return R"HTML(
 <!doctype html>
@@ -78,6 +85,27 @@ String pageHtml() {
     }
     .muted { color: #9ca3af; }
     .grid { display: grid; gap: 8px; }
+    button.secondary {
+      background: #374151;
+      color: #e5e7eb;
+    }
+    #resultBox {
+      margin-top: 12px;
+      padding: 16px;
+      background: #0b1220;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      text-align: center;
+    }
+    #resultText {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+      line-height: 1.35;
+    }
+    .status {
+      min-height: 1.2em;
+      color: #9ca3af;
+    }
   </style>
 </head>
 <body>
@@ -93,35 +121,42 @@ String pageHtml() {
     <div id="controls" style="display:none">
       <h2 id="roleTitle"></h2>
 
-      <div id="pitcherControls" class="grid" style="display:none">
-        <select id="pitchHeight">
-          <option value="high">High</option>
-          <option value="middle">Middle</option>
-          <option value="low">Low</option>
-        </select>
-        <select id="pitchSpeed">
-          <option value="fast">Fast</option>
-          <option value="medium">Medium</option>
-          <option value="slow">Slow</option>
-        </select>
-        <button onclick="submitPitch()">Lock Pitch</button>
+      <div id="playControls">
+        <div id="pitcherControls" class="grid" style="display:none">
+          <select id="pitchHeight">
+            <option value="high">High</option>
+            <option value="middle">Middle</option>
+            <option value="low">Low</option>
+          </select>
+          <select id="pitchSpeed">
+            <option value="fast">Fast</option>
+            <option value="medium">Medium</option>
+            <option value="slow">Slow</option>
+          </select>
+          <button id="lockPitch" onclick="submitPitch()">Lock Pitch</button>
+        </div>
+
+        <div id="hitterControls" class="grid" style="display:none">
+          <select id="swingHeight">
+            <option value="high">High</option>
+            <option value="middle">Middle</option>
+            <option value="low">Low</option>
+          </select>
+          <select id="swingTiming">
+            <option value="fast">Early / Fast</option>
+            <option value="medium">On Time</option>
+            <option value="slow">Late / Slow</option>
+          </select>
+          <button id="lockSwing" onclick="submitSwing()">Lock Swing</button>
+        </div>
       </div>
 
-      <div id="hitterControls" class="grid" style="display:none">
-        <select id="swingHeight">
-          <option value="high">High</option>
-          <option value="middle">Middle</option>
-          <option value="low">Low</option>
-        </select>
-        <select id="swingTiming">
-          <option value="fast">Early / Fast</option>
-          <option value="medium">On Time</option>
-          <option value="slow">Late / Slow</option>
-        </select>
-        <button onclick="submitSwing()">Lock Swing</button>
-      </div>
+      <p id="status" class="status"></p>
 
-      <p id="status" class="muted"></p>
+      <div id="resultBox" style="display:none">
+        <h2 id="resultText"></h2>
+        <button class="secondary" onclick="nextPitch()">Next Pitch</button>
+      </div>
     </div>
   </main>
 
@@ -140,6 +175,8 @@ function join(nextRole) {
 
   document.getElementById("hitterControls").style.display =
     role === "hitter" ? "grid" : "none";
+
+  refreshState();
 }
 
 async function postJson(url, data) {
@@ -148,7 +185,39 @@ async function postJson(url, data) {
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(data)
   });
-  return await res.text();
+  return await res.json();
+}
+
+function renderState(state) {
+  const statusEl = document.getElementById("status");
+  const resultBox = document.getElementById("resultBox");
+  const playControls = document.getElementById("playControls");
+  const hasResult = state.result && state.pitchLocked && state.swingLocked;
+
+  if (hasResult) {
+    document.getElementById("resultText").textContent = state.result;
+    resultBox.style.display = "block";
+    playControls.style.display = "none";
+    statusEl.textContent = "";
+    return;
+  }
+
+  resultBox.style.display = "none";
+  playControls.style.display = "block";
+
+  if (state.pitchLocked && state.swingLocked) {
+    statusEl.textContent = "Both players locked. Resolving...";
+  } else if (state.pitchLocked) {
+    statusEl.textContent = role === "pitcher"
+      ? "Pitch locked. Waiting for hitter."
+      : "Pitcher is ready. Lock your swing.";
+  } else if (state.swingLocked) {
+    statusEl.textContent = role === "hitter"
+      ? "Swing locked. Waiting for pitcher."
+      : "Hitter is ready. Lock your pitch.";
+  } else {
+    statusEl.textContent = "Waiting for both players to lock in.";
+  }
 }
 
 async function submitPitch() {
@@ -156,8 +225,7 @@ async function submitPitch() {
     height: document.getElementById("pitchHeight").value,
     speed: document.getElementById("pitchSpeed").value
   };
-  document.getElementById("status").textContent =
-    await postJson("/api/pitch", data);
+  renderState(await postJson("/api/pitch", data));
 }
 
 async function submitSwing() {
@@ -165,30 +233,25 @@ async function submitSwing() {
     height: document.getElementById("swingHeight").value,
     timing: document.getElementById("swingTiming").value
   };
-  document.getElementById("status").textContent =
-    await postJson("/api/swing", data);
+  renderState(await postJson("/api/swing", data));
 }
 
-setInterval(async () => {
-  if (!role) return;
+async function nextPitch() {
+  const res = await fetch("/api/reset", {method: "POST"});
+  renderState(await res.json());
+}
 
+async function refreshState() {
+  if (!role) return;
   try {
     const res = await fetch("/api/state");
-    const state = await res.json();
-
-    if (state.result) {
-      document.getElementById("status").textContent = state.result;
-    } else if (state.pitchLocked && state.swingLocked) {
-      document.getElementById("status").textContent = "Both players locked.";
-    } else if (state.pitchLocked) {
-      document.getElementById("status").textContent = "Pitch locked. Waiting for hitter.";
-    } else if (state.swingLocked) {
-      document.getElementById("status").textContent = "Swing locked. Waiting for pitcher.";
-    }
+    renderState(await res.json());
   } catch (err) {
     console.log(err);
   }
-}, 1000);
+}
+
+setInterval(refreshState, 1000);
 </script>
 </body>
 </html>
@@ -244,7 +307,7 @@ void handleRoot() {
 
 void checkResolve();
 String getStateJson();
-String resolvePlay(String pitch, String swing);
+PlayResult resolvePlay(String pitch, String swing);
 
 void handlePitch() {
   pitchLocked = true;
@@ -272,18 +335,9 @@ void handleSwing() {
 
 void checkResolve() {
   if (pitchLocked && swingLocked) {
-    resultText = resolvePlay(pitchValue, swingValue);
-    if (resultText.indexOf("Home run") >= 0 || resultText.indexOf("CRUSHED") >= 0) {
-      currentImage = "homerun";
-    } else if (resultText.indexOf("Strike") >= 0 || resultText.indexOf("miss") >= 0) {
-      currentImage = "strike";
-    } else if (resultText.indexOf("Single") >= 0 || resultText.indexOf("Base hit") >= 0) {
-      currentImage = "single";
-    } else if (resultText.indexOf("out") >= 0) {
-      currentImage = "out";
-    } else {
-      currentImage = "contact";
-    }
+    PlayResult result = resolvePlay(pitchValue, swingValue);
+    resultText = result.text;
+    currentImage = result.image;
 
     showIPixelResult(currentImage);
     Serial.println(resultText);
@@ -301,7 +355,7 @@ String getStateJson() {
   return json;
 }
 
-String resolvePlay(String pitch, String swing) {
+PlayResult resolvePlay(String pitch, String swing) {
   bool pitchHigh = pitch.indexOf("high") >= 0;
   bool pitchMiddle = pitch.indexOf("middle") >= 0;
   bool pitchLow = pitch.indexOf("low") >= 0;
@@ -331,27 +385,27 @@ String resolvePlay(String pitch, String swing) {
   int score = 4 - heightDiff - speedDiff;
 
   if (score >= 4) {
-    if (pitchHigh) return "CRUSHED! Home run to deep left field.";
-    if (pitchMiddle) return "Solid line drive into center field. Double.";
-    return "Hard grounder through the infield. Base hit.";
+    if (pitchHigh) return {"CRUSHED! Home run to deep left field.", "homerun"};
+    if (pitchMiddle) return {"Solid line drive into center field. Double.", "double"};
+    return {"Hard grounder through the infield. Base hit.", "single"};
   }
 
   if (score == 3) {
-    if (heightDiff == 0) return "Good contact. Single into the outfield.";
-    return "Weak contact. Blooper drops in for a single.";
+    if (heightDiff == 0) return {"Good contact. Single into the outfield.", "single"};
+    return {"Weak contact. Blooper drops in for a single.", "single"};
   }
 
   if (score == 2) {
-    if (pitchFast && swingSlow) return "Swing and miss. Late on the fastball.";
-    if (pitchSlow && swingFast) return "Out in front. Foul ball.";
-    return "Foul tip. Still alive.";
+    if (pitchFast && swingSlow) return {"Swing and miss. Late on the fastball.", "strike"};
+    if (pitchSlow && swingFast) return {"Out in front. Foul ball.", "foul"};
+    return {"Foul tip. Still alive.", "foul"};
   }
 
   if (score == 1) {
-    return "Bad swing. Routine ground out.";
+    return {"Bad swing. Routine ground out.", "flyout"};
   }
 
-  return "Strike! Complete miss.";
+  return {"Strike! Complete miss.", "strike"};
 }
 
 void handleReset() {
@@ -359,7 +413,8 @@ void handleReset() {
   swingLocked = false;
   pitchValue = "";
   swingValue = "";
-  resultText = "Waiting for lock";
+  resultText = "";
+  currentImage = "waiting";
 
   server.send(200, "application/json", getStateJson());
 }
