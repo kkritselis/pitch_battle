@@ -8,6 +8,8 @@
 static const char *IPIXEL_WRITE_UUID = "0000fa02-0000-1000-8000-00805f9b34fb";
 static const char *IPIXEL_NOTIFY_UUID = "0000fa03-0000-1000-8000-00805f9b34fb";
 static const char *IPIXEL_SERVICE_UUID = "0000fa00-0000-1000-8000-00805f9b34fb";
+static const char *IPIXEL_AE_WRITE_UUID = "0000ae01-0000-1000-8000-00805f9b34fb";
+static const char *IPIXEL_AE_NOTIFY_UUID = "0000ae02-0000-1000-8000-00805f9b34fb";
 
 static NimBLEClient *ipixelClient = nullptr;
 static NimBLERemoteCharacteristic *ipixelWriteChar = nullptr;
@@ -22,6 +24,25 @@ static uint32_t ipixelLastStatusPrintMs = 0;
 static uint8_t ipixelDevicesSeenCount = 0;
 static volatile bool ipixelAckPending = false;
 static volatile bool ipixelAckReceived = false;
+static bool ipixelBurstActive = false;
+static uint8_t ipixelBurstSlot = 0;
+static uint8_t ipixelBurstStep = 0;
+static uint32_t ipixelBurstNextMs = 0;
+static char ipixelBurstLabel[16] = "";
+static bool ipixelBurstReturnToScoreboard = false;
+static bool ipixelScoreboardPending = false;
+static uint32_t ipixelScoreboardDueMs = 0;
+
+struct IPixelWriteResponseContext {
+  TaskHandle_t task;
+  int status;
+};
+
+static void ipixelStartSlotBurst(
+  uint8_t slot,
+  const String &label,
+  bool returnToScoreboard
+);
 
 static bool ipixelUseConfiguredMac() {
   return IPIXEL_MAC[0] != '\0';
@@ -86,6 +107,7 @@ static bool ipixelDeviceLooksLikeTarget(NimBLEAdvertisedDevice *device) {
 }
 
 static void ipixelLogNotify(uint8_t *data, size_t length) {
+#if IPIXEL_DIAGNOSTIC_MODE
   Serial.print("iPixel notify: ");
   for (size_t i = 0; i < length; i++) {
     if (data[i] < 16) Serial.print('0');
@@ -93,6 +115,7 @@ static void ipixelLogNotify(uint8_t *data, size_t length) {
     Serial.print(' ');
   }
   Serial.println();
+#endif
 }
 
 static void ipixelHandleNotify(
@@ -104,6 +127,8 @@ static void ipixelHandleNotify(
   ipixelLogNotify(data, length);
 
   if (length >= 5 && data[0] == 0x05 && (data[4] == 0x00 || data[4] == 0x01 || data[4] == 0x03)) {
+    Serial.print("iPixel ACK code=");
+    Serial.println(data[4]);
     ipixelAckReceived = true;
     ipixelAckPending = false;
   }
@@ -117,6 +142,59 @@ static bool ipixelWaitForAck(uint32_t timeoutMs) {
   }
 
   return ipixelAckReceived;
+}
+
+static int ipixelOnWriteResponse(
+  uint16_t connHandle,
+  const struct ble_gatt_error *error,
+  struct ble_gatt_attr *attr,
+  void *arg
+) {
+  IPixelWriteResponseContext *ctx = (IPixelWriteResponseContext *)arg;
+  ctx->status = error != nullptr ? error->status : -1;
+  xTaskNotifyGive(ctx->task);
+  return 0;
+}
+
+static bool ipixelWriteWithResponseDirect(
+  uint16_t connId,
+  uint16_t handle,
+  const uint8_t *data,
+  size_t length
+) {
+  IPixelWriteResponseContext ctx = {
+    xTaskGetCurrentTaskHandle(),
+    -999
+  };
+
+#ifdef ulTaskNotifyValueClear
+  ulTaskNotifyValueClear(ctx.task, ULONG_MAX);
+#endif
+
+  const int startRc =
+    ble_gattc_write_flat(connId, handle, data, length, ipixelOnWriteResponse, &ctx);
+  Serial.print("iPixel direct response write startRc=");
+  Serial.print(startRc);
+  Serial.print(" connId=");
+  Serial.print(connId);
+  Serial.print(" handle=0x");
+  Serial.print(handle, HEX);
+  Serial.print(" len=");
+  Serial.println(length);
+
+  if (startRc != 0) {
+    return false;
+  }
+
+  const uint32_t notified = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(3000));
+  if (notified == 0) {
+    Serial.println("iPixel direct response write timeout");
+    return false;
+  }
+
+  Serial.print("iPixel direct response write status=");
+  Serial.println(ctx.status);
+  return ctx.status == 0 || ctx.status == BLE_HS_EDONE;
 }
 
 class IPixelScanCallbacks : public NimBLEAdvertisedDeviceCallbacks {
@@ -161,6 +239,7 @@ static IPixelScanCallbacks ipixelScanCallbacks;
 static IPixelClientCallbacks ipixelClientCallbacks;
 
 static void ipixelDumpGatt(NimBLEClient *client) {
+#if IPIXEL_LOG_GATT
   std::vector<NimBLERemoteService *> *services = client->getServices(true);
   if (services == nullptr || services->empty()) {
     Serial.println("iPixel GATT: no services discovered");
@@ -193,6 +272,9 @@ static void ipixelDumpGatt(NimBLEClient *client) {
       Serial.println();
     }
   }
+#else
+  client->getServices(true);
+#endif
 }
 
 static NimBLERemoteCharacteristic *ipixelFindCharacteristic(
@@ -277,22 +359,45 @@ static bool ipixelSendCommand(const uint8_t *data, size_t length, bool waitForAc
   ipixelAckReceived = false;
   ipixelAckPending = waitForAck;
 
-  // This display's fa02 only accepts write-without-response (response writes are
-  // rejected by the device). NimBLE's canWriteNoResponse() is unreliable here,
-  // so call the host write-no-response directly. Note: these writes have no flow
-  // control, so when Wi-Fi is also using the single radio (especially without
-  // the external antenna) the packets can be silently dropped before reaching
-  // the display -- this is the current gameplay limitation.
+#if IPIXEL_WRITE_WITH_RESPONSE
   const uint16_t connId = ipixelClient->getConnId();
-  const uint16_t handle = ipixelWriteChar->getHandle();
-  const int rc = ble_gattc_write_no_rsp_flat(connId, handle, data, length);
-  if (rc != 0) {
+  const uint16_t handle =
+    IPIXEL_RAW_WRITE_HANDLE != 0 ? IPIXEL_RAW_WRITE_HANDLE : ipixelWriteChar->getHandle();
+  const bool ok = ipixelWriteWithResponseDirect(connId, handle, data, length);
+  Serial.print("iPixel write result: response=");
+  Serial.print(ok ? "ok" : "fail");
+  Serial.print(" connId=");
+  Serial.print(connId);
+  Serial.print(" handle=0x");
+  Serial.print(handle, HEX);
+  Serial.print(" len=");
+  Serial.println(length);
+  if (!ok) {
     ipixelAckPending = false;
-    Serial.print("iPixel write failed (rc=");
-    Serial.print(rc);
-    Serial.println(")");
     return false;
   }
+#else
+  // The ESP32's current stable path is direct write-without-response. It avoids
+  // the fa02 response-write failure seen on this device, but has no delivery
+  // confirmation, so diagnostics can compare it against the Mac-style response
+  // path by setting IPIXEL_WRITE_WITH_RESPONSE to 1.
+  const uint16_t connId = ipixelClient->getConnId();
+  const uint16_t handle =
+    IPIXEL_RAW_WRITE_HANDLE != 0 ? IPIXEL_RAW_WRITE_HANDLE : ipixelWriteChar->getHandle();
+  const int rc = ble_gattc_write_no_rsp_flat(connId, handle, data, length);
+  Serial.print("iPixel write result: rc=");
+  Serial.print(rc);
+  Serial.print(" connId=");
+  Serial.print(connId);
+  Serial.print(" handle=0x");
+  Serial.print(handle, HEX);
+  Serial.print(" len=");
+  Serial.println(length);
+  if (rc != 0) {
+    ipixelAckPending = false;
+    return false;
+  }
+#endif
 
   if (!waitForAck) {
     return true;
@@ -300,6 +405,73 @@ static bool ipixelSendCommand(const uint8_t *data, size_t length, bool waitForAc
 
   if (!ipixelWaitForAck(3000)) {
     Serial.println("iPixel command ack timeout");
+    return false;
+  }
+
+  return true;
+}
+
+static bool ipixelSendCommandToHandle(
+  uint16_t handle,
+  const uint8_t *data,
+  size_t length,
+  bool waitForAck
+) {
+  if (!ipixelReady || ipixelClient == nullptr || !ipixelClient->isConnected()) {
+    return false;
+  }
+
+  Serial.print("iPixel raw handle write: handle=0x");
+  Serial.print(handle, HEX);
+  Serial.print(" data=");
+  for (size_t i = 0; i < length; i++) {
+    if (data[i] < 16) Serial.print('0');
+    Serial.print(data[i], HEX);
+    Serial.print(' ');
+  }
+  Serial.println();
+
+  ipixelAckReceived = false;
+  ipixelAckPending = waitForAck;
+
+  const uint16_t connId = ipixelClient->getConnId();
+#if IPIXEL_WRITE_WITH_RESPONSE
+  const bool ok = ipixelWriteWithResponseDirect(connId, handle, data, length);
+  Serial.print("iPixel raw handle response result=");
+  Serial.print(ok ? "ok" : "fail");
+  Serial.print(" connId=");
+  Serial.print(connId);
+  Serial.print(" handle=0x");
+  Serial.print(handle, HEX);
+  Serial.print(" len=");
+  Serial.println(length);
+  if (!ok) {
+    ipixelAckPending = false;
+    return false;
+  }
+#else
+  const int rc = ble_gattc_write_no_rsp_flat(connId, handle, data, length);
+  Serial.print("iPixel raw handle result: rc=");
+  Serial.print(rc);
+  Serial.print(" connId=");
+  Serial.print(connId);
+  Serial.print(" handle=0x");
+  Serial.print(handle, HEX);
+  Serial.print(" len=");
+  Serial.println(length);
+
+  if (rc != 0) {
+    ipixelAckPending = false;
+    return false;
+  }
+#endif
+
+  if (!waitForAck) {
+    return true;
+  }
+
+  if (!ipixelWaitForAck(2000)) {
+    Serial.println("iPixel raw handle ack timeout");
     return false;
   }
 
@@ -318,15 +490,21 @@ static bool ipixelSendSlotCommand(uint8_t slot) {
   // Note: if the requested slot is empty the device falls back to cycling
   // through whatever slots are populated.
   const uint8_t cmd[] = {0x07, 0x00, 0x08, 0x80, 0x01, 0x00, slot};
-  return ipixelSendCommand(cmd, sizeof(cmd), false);
+  return ipixelSendCommand(cmd, sizeof(cmd), IPIXEL_REQUIRE_SLOT_ACK);
 }
 
 static bool ipixelFinishConnection() {
   ipixelDumpGatt(ipixelClient);
 
-  ipixelWriteChar = ipixelFindCharacteristic(ipixelClient, IPIXEL_WRITE_UUID);
+  const char *writeUuid = IPIXEL_USE_AE_CHANNEL ? IPIXEL_AE_WRITE_UUID : IPIXEL_WRITE_UUID;
+  const char *notifyUuid = IPIXEL_USE_AE_CHANNEL ? IPIXEL_AE_NOTIFY_UUID : IPIXEL_NOTIFY_UUID;
+
+  Serial.print("iPixel channel: ");
+  Serial.println(IPIXEL_USE_AE_CHANNEL ? "ae01/ae02" : "fa02/fa03");
+
+  ipixelWriteChar = ipixelFindCharacteristic(ipixelClient, writeUuid);
   if (ipixelWriteChar == nullptr) {
-    Serial.println("iPixel write char fa02 not found; trying first writable");
+    Serial.println("iPixel configured write char not found; trying first writable");
     ipixelWriteChar = ipixelFindWritable(ipixelClient);
   }
   if (ipixelWriteChar == nullptr) {
@@ -338,7 +516,7 @@ static bool ipixelFinishConnection() {
   Serial.println(ipixelWriteChar->getUUID().toString().c_str());
 
   NimBLERemoteCharacteristic *notifyChar =
-    ipixelFindCharacteristic(ipixelClient, IPIXEL_NOTIFY_UUID);
+    ipixelFindCharacteristic(ipixelClient, notifyUuid);
   if (notifyChar == nullptr) {
     notifyChar = ipixelFindNotifiable(ipixelClient);
   }
@@ -445,6 +623,21 @@ static bool ipixelTryConnectAndShowLogo(bool allowScanDuringWifi) {
   return ipixelShowLogoOnce();
 }
 
+static bool ipixelTryConnectOnly(bool allowScanDuringWifi) {
+  if (ipixelUseConfiguredMac()) {
+    ipixelTargetAddress = IPIXEL_MAC;
+    ipixelHaveTargetAddress = true;
+  }
+
+  if (!ipixelHaveTargetAddress) {
+    if (!ipixelScanOnce(allowScanDuringWifi)) {
+      return false;
+    }
+  }
+
+  return ipixelConnectToAddress(ipixelTargetAddress);
+}
+
 void ipixelBegin() {
   ipixelDevicesSeenCount = 0;
 
@@ -455,6 +648,17 @@ void ipixelBegin() {
   esp_coex_preference_set(ESP_COEX_PREFER_BT);
   NimBLEDevice::init("PitchBattle");
   NimBLEDevice::setPower(ESP_PWR_LVL_P9);
+
+#if IPIXEL_DIAGNOSTIC_MODE
+  if (ipixelTryConnectOnly(false)) {
+    Serial.print("iPixel diagnostic connect success. Saved address: ");
+    Serial.println(ipixelTargetAddress.c_str());
+  } else {
+    Serial.println("iPixel diagnostic connect failed. Diagnostic loop will retry manually after reset.");
+  }
+  Serial.flush();
+  return;
+#endif
 
   const uint32_t deadline = millis() + IPIXEL_BOOT_WAIT_MS;
 
@@ -486,6 +690,60 @@ void ipixelNotifyWifiActive() {
 }
 
 void ipixelLoop() {
+  if (ipixelBurstActive && millis() >= ipixelBurstNextMs) {
+    bool sent = false;
+
+    if (!ipixelIsConnected()) {
+      Serial.println("iPixel burst aborted (disconnected)");
+      ipixelBurstActive = false;
+    } else if (ipixelBurstStep == 0) {
+      Serial.print("iPixel burst step handshake label=");
+      Serial.println(ipixelBurstLabel);
+      sent = ipixelSendDeviceInfo();
+      ipixelBurstStep++;
+      ipixelBurstNextMs = millis() + 120;
+    } else if (ipixelBurstStep <= 3) {
+      Serial.print("iPixel burst step slot attempt=");
+      Serial.print(ipixelBurstStep);
+      Serial.print(" slot=");
+      Serial.println(ipixelBurstSlot);
+      sent = ipixelSendSlotCommand(ipixelBurstSlot);
+      ipixelBurstStep++;
+      ipixelBurstNextMs = millis() + 120;
+    } else {
+      Serial.print("iPixel burst complete label=");
+      Serial.print(ipixelBurstLabel);
+      Serial.print(" slot=");
+      Serial.println(ipixelBurstSlot);
+      if (ipixelBurstReturnToScoreboard && ipixelBurstSlot != IPIXEL_SLOT_SCOREBOARD) {
+        ipixelScoreboardPending = true;
+        ipixelScoreboardDueMs = millis() + IPIXEL_SCOREBOARD_RETURN_MS;
+        Serial.print("iPixel scoreboard return scheduled in ms=");
+        Serial.println(IPIXEL_SCOREBOARD_RETURN_MS);
+      }
+      ipixelBurstActive = false;
+      ipixelBurstReturnToScoreboard = false;
+      if (ipixelWifiActive) {
+        esp_coex_preference_set(ESP_COEX_PREFER_BALANCE);
+        Serial.println("iPixel coex restored balance");
+      }
+    }
+
+    if (ipixelBurstActive && !sent) {
+      Serial.println("iPixel burst write failed; will continue retries");
+    }
+  }
+
+  if (!ipixelBurstActive && ipixelScoreboardPending && millis() >= ipixelScoreboardDueMs) {
+    ipixelScoreboardPending = false;
+    Serial.println("iPixel returning to scoreboard slot");
+    ipixelStartSlotBurst(IPIXEL_SLOT_SCOREBOARD, "scoreboard", false);
+  }
+
+#if IPIXEL_DIAGNOSTIC_MODE
+  return;
+#endif
+
   if (!ipixelLogoShown && millis() - ipixelLastStatusPrintMs >= 10000) {
     ipixelLastStatusPrintMs = millis();
     Serial.print("iPixel status: logo=");
@@ -497,7 +755,7 @@ void ipixelLoop() {
     Serial.flush();
   }
 
-  if (ipixelLogoShown || ipixelScanning || millis() < ipixelNextAttemptMs) {
+  if (ipixelBurstActive || ipixelLogoShown || ipixelScanning || millis() < ipixelNextAttemptMs) {
     return;
   }
 
@@ -525,6 +783,47 @@ bool ipixelIsConnected() {
   return ipixelReady && ipixelClient != nullptr && ipixelClient->isConnected();
 }
 
+static uint8_t ipixelSlotForImage(const String &imageName) {
+  if (imageName == "homerun") return IPIXEL_SLOT_HOMERUN;
+  if (imageName == "triple") return IPIXEL_SLOT_TRIPLE;
+  if (imageName == "double") return IPIXEL_SLOT_DOUBLE;
+  if (imageName == "single") return IPIXEL_SLOT_SINGLE;
+  if (imageName == "walk") return IPIXEL_SLOT_WALK;
+  if (imageName == "strike") return IPIXEL_SLOT_BALL;
+  if (imageName == "foul") return IPIXEL_SLOT_FOUL;
+  if (imageName == "flyout" || imageName == "out") return IPIXEL_SLOT_FLYOUT;
+  return IPIXEL_SLOT_LOGO;
+}
+
+static void ipixelStartSlotBurst(
+  uint8_t slot,
+  const String &label,
+  bool returnToScoreboard
+) {
+  if (!ipixelIsConnected()) {
+    Serial.println("iPixel burst skipped (not connected)");
+    return;
+  }
+
+  ipixelBurstSlot = slot;
+  ipixelBurstStep = 0;
+  ipixelBurstNextMs = millis();
+  ipixelBurstActive = true;
+  ipixelBurstReturnToScoreboard = returnToScoreboard;
+  ipixelScoreboardPending = false;
+  label.toCharArray(ipixelBurstLabel, sizeof(ipixelBurstLabel));
+
+  Serial.print("iPixel burst queued label=");
+  Serial.print(ipixelBurstLabel);
+  Serial.print(" slot=");
+  Serial.println(ipixelBurstSlot);
+
+  if (ipixelWifiActive) {
+    esp_coex_preference_set(ESP_COEX_PREFER_BT);
+    Serial.println("iPixel coex prefer BT for burst");
+  }
+}
+
 bool ipixelShowSlot(uint8_t slot) {
   if (!ipixelIsConnected()) {
     return false;
@@ -533,49 +832,39 @@ bool ipixelShowSlot(uint8_t slot) {
   return ipixelSendSlotCommand(slot);
 }
 
+bool ipixelShowSlotAtHandle(uint8_t slot, uint16_t handle, bool waitForAck) {
+  const uint8_t cmd[] = {0x07, 0x00, 0x08, 0x80, 0x01, 0x00, slot};
+  return ipixelSendCommandToHandle(handle, cmd, sizeof(cmd), waitForAck);
+}
+
+bool ipixelBusy() {
+  return ipixelBurstActive;
+}
+
+void showIPixelScoreboard() {
+  if (!ipixelIsConnected()) {
+    Serial.println("iPixel scoreboard skipped (not connected)");
+    return;
+  }
+
+  Serial.print("iPixel scoreboard -> slot ");
+  Serial.println(IPIXEL_SLOT_SCOREBOARD);
+  ipixelStartSlotBurst(IPIXEL_SLOT_SCOREBOARD, "scoreboard", false);
+}
+
 void showIPixelResult(const String &imageName) {
   if (!ipixelIsConnected()) {
     Serial.println("iPixel result skipped (not connected)");
     return;
   }
 
-  uint8_t slot = IPIXEL_SLOT_LOGO;
-
-  if (imageName == "homerun") {
-    slot = IPIXEL_SLOT_HOMERUN;
-  } else if (imageName == "triple") {
-    slot = IPIXEL_SLOT_TRIPLE;
-  } else if (imageName == "double") {
-    slot = IPIXEL_SLOT_DOUBLE;
-  } else if (imageName == "single") {
-    slot = IPIXEL_SLOT_SINGLE;
-  } else if (imageName == "walk") {
-    slot = IPIXEL_SLOT_WALK;
-  } else if (imageName == "strike") {
-    slot = IPIXEL_SLOT_BALL;
-  } else if (imageName == "foul") {
-    slot = IPIXEL_SLOT_FOUL;
-  } else if (imageName == "flyout" || imageName == "out") {
-    slot = IPIXEL_SLOT_FLYOUT;
-  }
-
+  const uint8_t slot = ipixelSlotForImage(imageName);
   Serial.print("iPixel result '");
   Serial.print(imageName);
   Serial.print("' -> slot ");
   Serial.println(slot);
 
-  // After idle time (and with Wi-Fi competing for the radio) the display tends
-  // to drop back to autonomously looping its stored animations. Re-assert host
-  // control with the device-info handshake, then send the slot command a few
-  // times since write-without-response packets can be silently dropped on a
-  // busy or weak BLE link.
-  ipixelSendDeviceInfo();
-  delay(120);
-
-  for (int attempt = 0; attempt < 3; attempt++) {
-    ipixelShowSlot(slot);
-    delay(120);
-  }
+  ipixelStartSlotBurst(slot, imageName, true);
 }
 
 #endif

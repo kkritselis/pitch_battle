@@ -25,6 +25,33 @@
 // Set to 0 to run without iPixel BLE (web server and LCD only).
 #define ENABLE_IPIXEL 1
 
+// iPixel troubleshooting mode:
+// 0 = normal game
+// 1 = BLE-only slot cycle test (no Wi-Fi)
+// 2 = Wi-Fi-on idle slot cycle test (no phone input needed)
+#define IPIXEL_DIAGNOSTIC_MODE 0
+
+#define IPIXEL_DIAG_SLOT_INTERVAL_MS 4000
+#define IPIXEL_LOG_GATT 1
+// 0 = ESP32 direct write-no-response path (current stable path)
+// 1 = Mac pypixelcolor-style GATT write-with-response experiment
+#define IPIXEL_WRITE_WITH_RESPONSE 1
+// 0 = documented pypixelcolor FA02/FA03 channel
+// 1 = alternate AE01/AE02 vendor channel exposed by this iPixel
+#define IPIXEL_USE_AE_CHANNEL 0
+// 0 = fire and forget slot commands
+// 1 = wait for the notify ACK that pypixelcolor expects for show_slot
+#define IPIXEL_REQUIRE_SLOT_ACK 0
+// Diagnostic-only: write show_slot directly to raw ATT handles, useful when
+// UUID-based characteristic writes queue successfully but the display ignores
+// them. Known low-level iPixel docs mention handle 0x0006 on some variants.
+#define IPIXEL_DIAG_HANDLE_SCAN 0
+#define IPIXEL_DIAG_HANDLE_START 0x0005
+#define IPIXEL_DIAG_HANDLE_END 0x000F
+// 0 = use characteristic handle from NimBLE
+// nonzero = write all iPixel commands to this raw ATT handle
+#define IPIXEL_RAW_WRITE_HANDLE 0x0006
+
 // Devices advertise as LED_BLE_<id>. Leave IPIXEL_MAC empty to scan by name.
 #define IPIXEL_DEVICE_PREFIX "LED_BLE_"
 // Leave empty unless your display uses a different advertised name.
@@ -43,6 +70,9 @@
 
 // After Wi-Fi starts, keep looking for the display until logo is shown.
 #define IPIXEL_BACKGROUND_RETRY_MS 30000
+
+// After showing a result animation, return the iPixel to the stored scoreboard slot.
+#define IPIXEL_SCOREBOARD_RETURN_MS 5000
 
 // Stored animation slots (uploaded during Mac prototype work).
 #define IPIXEL_SLOT_HOMERUN 1

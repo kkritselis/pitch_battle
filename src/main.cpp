@@ -36,13 +36,49 @@ String pitchValue = "";
 String swingValue = "";
 String resultText = "";
 String currentImage = "waiting";
+String pendingIPixelImage = "";
+bool pendingIPixelResult = false;
+uint32_t lastDiagnosticSlotMs = 0;
+uint8_t diagnosticSlotIndex = 0;
+uint16_t diagnosticHandle = IPIXEL_DIAG_HANDLE_START;
+const uint8_t DIAGNOSTIC_SLOTS[] = {
+  IPIXEL_SLOT_HOMERUN,
+  IPIXEL_SLOT_SINGLE,
+  IPIXEL_SLOT_FOUL,
+  IPIXEL_SLOT_LOGO
+};
 
 // Outcome of a resolved play: the text shown on the phones and the image token
 // used to pick an iPixel animation slot (see showIPixelResult).
+enum OutcomeType {
+  OUTCOME_HOMERUN,
+  OUTCOME_DOUBLE,
+  OUTCOME_SINGLE,
+  OUTCOME_FOUL,
+  OUTCOME_STRIKE,
+  OUTCOME_OUT
+};
+
 struct PlayResult {
   String text;
   String image;
+  OutcomeType outcome;
 };
+
+struct GameState {
+  uint8_t inning = 1;
+  bool topHalf = true;
+  uint8_t homeScore = 0;
+  uint8_t awayScore = 0;
+  uint8_t balls = 0;
+  uint8_t strikes = 0;
+  uint8_t outs = 0;
+  bool runnerFirst = false;
+  bool runnerSecond = false;
+  bool runnerThird = false;
+};
+
+GameState gameState;
 
 String pageHtml() {
   return R"HTML(
@@ -106,6 +142,23 @@ String pageHtml() {
       min-height: 1.2em;
       color: #9ca3af;
     }
+    #scoreboard {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+      padding: 12px;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      background: #111827;
+    }
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .bases {
+      letter-spacing: 0.08em;
+    }
   </style>
 </head>
 <body>
@@ -120,6 +173,17 @@ String pageHtml() {
 
     <div id="controls" style="display:none">
       <h2 id="roleTitle"></h2>
+
+      <div id="scoreboard">
+        <div class="score-row">
+          <strong id="inningText">Top 1</strong>
+          <strong id="scoreText">Away 0 - Home 0</strong>
+        </div>
+        <div class="score-row muted">
+          <span id="countText">Count 0-0, 0 out</span>
+          <span id="basesText" class="bases">Bases ---</span>
+        </div>
+      </div>
 
       <div id="playControls">
         <div id="pitcherControls" class="grid" style="display:none">
@@ -156,6 +220,7 @@ String pageHtml() {
       <div id="resultBox" style="display:none">
         <h2 id="resultText"></h2>
         <button class="secondary" onclick="nextPitch()">Next Pitch</button>
+        <button class="secondary" onclick="newGame()">New Game</button>
       </div>
     </div>
   </main>
@@ -193,6 +258,20 @@ function renderState(state) {
   const resultBox = document.getElementById("resultBox");
   const playControls = document.getElementById("playControls");
   const hasResult = state.result && state.pitchLocked && state.swingLocked;
+  const halfText = state.half === "top" ? "Top" : "Bottom";
+  const outText = state.outs === 1 ? "out" : "outs";
+  const bases =
+    (state.runnerFirst ? "1" : "-") +
+    (state.runnerSecond ? "2" : "-") +
+    (state.runnerThird ? "3" : "-");
+
+  document.getElementById("inningText").textContent =
+    `${halfText} ${state.inning}`;
+  document.getElementById("scoreText").textContent =
+    `Away ${state.awayScore} - Home ${state.homeScore}`;
+  document.getElementById("countText").textContent =
+    `Count ${state.balls}-${state.strikes}, ${state.outs} ${outText}`;
+  document.getElementById("basesText").textContent = `Bases ${bases}`;
 
   if (hasResult) {
     document.getElementById("resultText").textContent = state.result;
@@ -238,6 +317,11 @@ async function submitSwing() {
 
 async function nextPitch() {
   const res = await fetch("/api/reset", {method: "POST"});
+  renderState(await res.json());
+}
+
+async function newGame() {
+  const res = await fetch("/api/new-game", {method: "POST"});
   renderState(await res.json());
 }
 
@@ -305,6 +389,117 @@ void handleRoot() {
   server.send(200, "text/html", pageHtml());
 }
 
+uint8_t &battingScore() {
+  return gameState.topHalf ? gameState.awayScore : gameState.homeScore;
+}
+
+void resetCount() {
+  gameState.balls = 0;
+  gameState.strikes = 0;
+}
+
+void clearBases() {
+  gameState.runnerFirst = false;
+  gameState.runnerSecond = false;
+  gameState.runnerThird = false;
+}
+
+void advanceHalfInning() {
+  gameState.outs = 0;
+  resetCount();
+  clearBases();
+
+  if (gameState.topHalf) {
+    gameState.topHalf = false;
+  } else {
+    gameState.topHalf = true;
+    gameState.inning++;
+  }
+}
+
+void addOut() {
+  gameState.outs++;
+  resetCount();
+
+  if (gameState.outs >= 3) {
+    advanceHalfInning();
+  }
+}
+
+void scoreRun() {
+  battingScore()++;
+}
+
+void advanceRunners(uint8_t batterBases) {
+  if (batterBases >= 4) {
+    if (gameState.runnerFirst) scoreRun();
+    if (gameState.runnerSecond) scoreRun();
+    if (gameState.runnerThird) scoreRun();
+    scoreRun();
+    clearBases();
+    resetCount();
+    return;
+  }
+
+  bool nextFirst = false;
+  bool nextSecond = false;
+  bool nextThird = false;
+
+  if (gameState.runnerThird) scoreRun();
+
+  if (gameState.runnerSecond) {
+    if (batterBases >= 2) scoreRun();
+    else nextThird = true;
+  }
+
+  if (gameState.runnerFirst) {
+    if (batterBases >= 3) scoreRun();
+    else if (batterBases == 2) nextThird = true;
+    else nextSecond = true;
+  }
+
+  if (batterBases == 3) nextThird = true;
+  if (batterBases == 2) nextSecond = true;
+  if (batterBases == 1) nextFirst = true;
+
+  gameState.runnerFirst = nextFirst;
+  gameState.runnerSecond = nextSecond;
+  gameState.runnerThird = nextThird;
+  resetCount();
+}
+
+void applyPlayResult(const PlayResult &result) {
+  switch (result.outcome) {
+    case OUTCOME_HOMERUN:
+      advanceRunners(4);
+      break;
+    case OUTCOME_DOUBLE:
+      advanceRunners(2);
+      break;
+    case OUTCOME_SINGLE:
+      advanceRunners(1);
+      break;
+    case OUTCOME_FOUL:
+      if (gameState.strikes < 2) {
+        gameState.strikes++;
+      }
+      break;
+    case OUTCOME_STRIKE:
+      gameState.strikes++;
+      if (gameState.strikes >= 3) {
+        addOut();
+      }
+      break;
+    case OUTCOME_OUT:
+      addOut();
+      break;
+  }
+}
+
+void resetGameState() {
+  gameState = GameState();
+}
+
 void checkResolve();
 String getStateJson();
 PlayResult resolvePlay(String pitch, String swing);
@@ -338,8 +533,10 @@ void checkResolve() {
     PlayResult result = resolvePlay(pitchValue, swingValue);
     resultText = result.text;
     currentImage = result.image;
+    applyPlayResult(result);
+    pendingIPixelImage = currentImage;
+    pendingIPixelResult = true;
 
-    showIPixelResult(currentImage);
     Serial.println(resultText);
   }
 }
@@ -349,7 +546,17 @@ String getStateJson() {
   json += "\"pitchLocked\":" + String(pitchLocked ? "true" : "false") + ",";
   json += "\"swingLocked\":" + String(swingLocked ? "true" : "false") + ",";
   json += "\"result\":\"" + resultText + "\",";
-  json += "\"image\":\"" + currentImage + "\"";
+  json += "\"image\":\"" + currentImage + "\",";
+  json += "\"inning\":" + String(gameState.inning) + ",";
+  json += "\"half\":\"" + String(gameState.topHalf ? "top" : "bottom") + "\",";
+  json += "\"homeScore\":" + String(gameState.homeScore) + ",";
+  json += "\"awayScore\":" + String(gameState.awayScore) + ",";
+  json += "\"balls\":" + String(gameState.balls) + ",";
+  json += "\"strikes\":" + String(gameState.strikes) + ",";
+  json += "\"outs\":" + String(gameState.outs) + ",";
+  json += "\"runnerFirst\":" + String(gameState.runnerFirst ? "true" : "false") + ",";
+  json += "\"runnerSecond\":" + String(gameState.runnerSecond ? "true" : "false") + ",";
+  json += "\"runnerThird\":" + String(gameState.runnerThird ? "true" : "false");
   json += "}";
 
   return json;
@@ -385,27 +592,27 @@ PlayResult resolvePlay(String pitch, String swing) {
   int score = 4 - heightDiff - speedDiff;
 
   if (score >= 4) {
-    if (pitchHigh) return {"CRUSHED! Home run to deep left field.", "homerun"};
-    if (pitchMiddle) return {"Solid line drive into center field. Double.", "double"};
-    return {"Hard grounder through the infield. Base hit.", "single"};
+    if (pitchHigh) return {"CRUSHED! Home run to deep left field.", "homerun", OUTCOME_HOMERUN};
+    if (pitchMiddle) return {"Solid line drive into center field. Double.", "double", OUTCOME_DOUBLE};
+    return {"Hard grounder through the infield. Base hit.", "single", OUTCOME_SINGLE};
   }
 
   if (score == 3) {
-    if (heightDiff == 0) return {"Good contact. Single into the outfield.", "single"};
-    return {"Weak contact. Blooper drops in for a single.", "single"};
+    if (heightDiff == 0) return {"Good contact. Single into the outfield.", "single", OUTCOME_SINGLE};
+    return {"Weak contact. Blooper drops in for a single.", "single", OUTCOME_SINGLE};
   }
 
   if (score == 2) {
-    if (pitchFast && swingSlow) return {"Swing and miss. Late on the fastball.", "strike"};
-    if (pitchSlow && swingFast) return {"Out in front. Foul ball.", "foul"};
-    return {"Foul tip. Still alive.", "foul"};
+    if (pitchFast && swingSlow) return {"Swing and miss. Late on the fastball.", "strike", OUTCOME_STRIKE};
+    if (pitchSlow && swingFast) return {"Out in front. Foul ball.", "foul", OUTCOME_FOUL};
+    return {"Foul tip. Still alive.", "foul", OUTCOME_FOUL};
   }
 
   if (score == 1) {
-    return {"Bad swing. Routine ground out.", "flyout"};
+    return {"Bad swing. Routine ground out.", "flyout", OUTCOME_OUT};
   }
 
-  return {"Strike! Complete miss.", "strike"};
+  return {"Strike! Complete miss.", "strike", OUTCOME_STRIKE};
 }
 
 void handleReset() {
@@ -415,12 +622,78 @@ void handleReset() {
   swingValue = "";
   resultText = "";
   currentImage = "waiting";
+  pendingIPixelImage = "";
+  pendingIPixelResult = false;
+
+  server.send(200, "application/json", getStateJson());
+}
+
+void handleNewGame() {
+  pitchLocked = false;
+  swingLocked = false;
+  pitchValue = "";
+  swingValue = "";
+  resultText = "";
+  currentImage = "waiting";
+  pendingIPixelImage = "";
+  pendingIPixelResult = false;
+  resetGameState();
 
   server.send(200, "application/json", getStateJson());
 }
 
 void handleState() {
   server.send(200, "application/json", getStateJson());
+}
+
+void processPendingIPixelResult() {
+  if (!pendingIPixelResult || ipixelBusy()) {
+    return;
+  }
+
+  Serial.print("iPixel pending result dispatch: ");
+  Serial.println(pendingIPixelImage);
+  showIPixelResult(pendingIPixelImage);
+  pendingIPixelResult = false;
+}
+
+void runIPixelDiagnosticCycle() {
+  if (ipixelBusy() || millis() - lastDiagnosticSlotMs < IPIXEL_DIAG_SLOT_INTERVAL_MS) {
+    return;
+  }
+
+  lastDiagnosticSlotMs = millis();
+  const uint8_t slotCount = sizeof(DIAGNOSTIC_SLOTS) / sizeof(DIAGNOSTIC_SLOTS[0]);
+  const uint8_t slot = DIAGNOSTIC_SLOTS[diagnosticSlotIndex % slotCount];
+  diagnosticSlotIndex++;
+
+  Serial.print("iPixel diagnostic cycle slot ");
+  Serial.println(slot);
+  Serial.print("iPixel diagnostic config: mode=");
+  Serial.print(IPIXEL_DIAGNOSTIC_MODE);
+  Serial.print(" aeChannel=");
+  Serial.print(IPIXEL_USE_AE_CHANNEL);
+  Serial.print(" writeWithResponse=");
+  Serial.print(IPIXEL_WRITE_WITH_RESPONSE);
+  Serial.print(" requireSlotAck=");
+  Serial.print(IPIXEL_REQUIRE_SLOT_ACK);
+  Serial.print(" handleScan=");
+  Serial.print(IPIXEL_DIAG_HANDLE_SCAN);
+  Serial.print(" rawHandle=0x");
+  Serial.println(IPIXEL_RAW_WRITE_HANDLE, HEX);
+
+#if IPIXEL_DIAG_HANDLE_SCAN
+  Serial.print("iPixel diagnostic raw handle scan handle=0x");
+  Serial.println(diagnosticHandle, HEX);
+  ipixelShowSlotAtHandle(slot, diagnosticHandle, IPIXEL_REQUIRE_SLOT_ACK);
+  diagnosticHandle++;
+  if (diagnosticHandle > IPIXEL_DIAG_HANDLE_END) {
+    diagnosticHandle = IPIXEL_DIAG_HANDLE_START;
+  }
+  return;
+#endif
+
+  ipixelShowSlot(slot);
 }
 
 void setup() {
@@ -464,6 +737,11 @@ void setup() {
   }
 #endif
 
+#if IPIXEL_DIAGNOSTIC_MODE == 1
+  Serial.println("iPixel diagnostic mode 1: BLE-only slot cycling. Wi-Fi disabled.");
+  return;
+#endif
+
   WiFi.mode(WIFI_AP);
   WiFi.softAP(AP_SSID, AP_PASSWORD);
   ipixelNotifyWifiActive();
@@ -485,6 +763,7 @@ void setup() {
 
   server.on("/api/state", HTTP_GET, handleState);
   server.on("/api/reset", HTTP_POST, handleReset);
+  server.on("/api/new-game", HTTP_POST, handleNewGame);
 
   server.on("/", HTTP_GET, handleRoot);
   server.on("/api/pitch", HTTP_POST, handlePitch);
@@ -522,10 +801,26 @@ void setup() {
 
   server.begin();
   drawQrCode(LOCAL_URL);
+
+#if IPIXEL_DIAGNOSTIC_MODE == 2
+  Serial.println("iPixel diagnostic mode 2: Wi-Fi-on idle slot cycling.");
+#endif
 }
 
 void loop() {
+#if IPIXEL_DIAGNOSTIC_MODE == 1
+  runIPixelDiagnosticCycle();
+  ipixelLoop();
+  return;
+#endif
+
   dnsServer.processNextRequest();
   server.handleClient();
+  processPendingIPixelResult();
+
+#if IPIXEL_DIAGNOSTIC_MODE == 2
+  runIPixelDiagnosticCycle();
+#endif
+
   ipixelLoop();
 }
