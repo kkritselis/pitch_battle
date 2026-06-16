@@ -1,4 +1,4 @@
-Logo
+<img src="./logo_readme.gif" alt="Pitch Battle logo" width="100%">
 
 # Pitch Battle
 
@@ -530,3 +530,4 @@ pitch_battle/
   platformio.ini      Board and library dependencies
   LICENSE             MIT
 ```
+
