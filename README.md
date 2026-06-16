@@ -1,8 +1,8 @@
 # Pitch Battle
 
-Pitch Battle is a self-contained tabletop baseball game. Players connect their phones to a local Wi-Fi network, choose pitch and swing options, and the host resolves each at-bat. Results appear on the phones and, eventually, on an external iPixel LED display.
+Pitch Battle is a self-contained tabletop baseball game. Players connect their phones to a local Wi-Fi network, choose pitch and swing options, and the host resolves each at-bat. Results appear on the phones and on an external iPixel LED display.
 
-The long-term goal is a game that needs no laptop, internet connection, or cloud services.
+The game needs no laptop, internet connection, or cloud services.
 
 ---
 
@@ -154,13 +154,13 @@ After flashing:
 ## API
 
 
-| Method | Path         | Description                        |
-| ------ | ------------ | ---------------------------------- |
-| `GET`  | `/`          | Game web UI                        |
-| `GET`  | `/api/state` | Current game state (JSON)          |
-| `POST` | `/api/pitch` | Lock pitcher selection (JSON body) |
-| `POST` | `/api/swing` | Lock hitter selection (JSON body)  |
-| `POST` | `/api/reset` | Reset locks and start a new at-bat |
+| Method | Path            | Description                          |
+| ------ | --------------- | ------------------------------------ |
+| `GET`  | `/`             | Game web UI                          |
+| `GET`  | `/api/state`    | Current game state (JSON)            |
+| `POST` | `/api/pitch`    | Lock pitcher selection (JSON body)   |
+| `POST` | `/api/swing`    | Lock hitter selection (JSON body)    |
+| `POST` | `/api/reset`    | Reset locks and start a new at-bat   |
 | `POST` | `/api/new-game` | Reset the full scoreboard/game state |
 
 
@@ -280,19 +280,19 @@ In `include/config.h`:
   - `1` BLE-only slot cycling, with Wi-Fi disabled
   - `2` Wi-Fi-on idle slot cycling, without phone input
 - `IPIXEL_WRITE_WITH_RESPONSE` — experiment switch for comparing the ESP32
-  write path against the Mac client (`0` is the current stable default)
+write path against the Mac client (`0` is the current stable default)
 - `IPIXEL_USE_AE_CHANNEL` — experiment switch for the alternate vendor
-  `ae01`/`ae02` channel exposed by this iPixel (`0` uses documented
-  `fa02`/`fa03`)
+`ae01`/`ae02` channel exposed by this iPixel (`0` uses documented
+`fa02`/`fa03`)
 - `IPIXEL_REQUIRE_SLOT_ACK` — experiment switch that waits for the notify ACK
-  after `show_slot`, matching the behavior expected by `pypixelcolor`
+after `show_slot`, matching the behavior expected by `pypixelcolor`
 - `IPIXEL_DIAG_HANDLE_SCAN` — diagnostic-only raw ATT handle scan for cases
-  where UUID writes return success but the display ignores commands
+where UUID writes return success but the display ignores commands
 - `IPIXEL_RAW_WRITE_HANDLE` — if nonzero, send commands to this raw ATT handle
-  instead of NimBLE's UUID-derived handle. Current diagnostics show handle
-  `0x0006` accepts response writes on this unit.
+instead of NimBLE's UUID-derived handle. Current diagnostics show handle
+`0x0006` accepts response writes on this unit.
 - `IPIXEL_SCOREBOARD_RETURN_MS` — how long a result animation stays on the
-  iPixel before returning to the stored scoreboard slot
+iPixel before returning to the stored scoreboard slot
 
 **Before testing:** Close the iPixel Color phone app. BLE allows only one connection at a time.
 
@@ -306,11 +306,13 @@ In `include/config.h`:
 
 **Reading the iPixel screen:**
 
-| What you see | What it means |
-|---|---|
-| Blinking blue link icon | iPixel is advertising and waiting for a BLE connection. Good time for ESP32 to connect. |
+
+| What you see                     | What it means                                                                                                    |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Blinking blue link icon          | iPixel is advertising and waiting for a BLE connection. Good time for ESP32 to connect.                          |
 | Animations cycling, no link icon | iPixel is playing stored content on its own. It is usually **not** advertising BLE, so the ESP32 cannot connect. |
-| Logo holding steady | ESP32 connected and sent slot 10 successfully |
+| Logo holding steady              | ESP32 connected and sent slot 10 successfully                                                                    |
+
 
 If the iPixel is stuck cycling animations, reset it from your Mac:
 
@@ -360,29 +362,33 @@ Watch the round LCD line `BLE devices: N` during boot. That count is the key dia
 Key findings from bring-up:
 
 - The display ignores NimBLE's UUID-derived write handle for `fa02` (`0x0009`)
-  even though queued writes report success. Raw ATT handle `0x0006` is the
-  working command handle for this unit.
+even though queued writes report success. Raw ATT handle `0x0006` is the
+working command handle for this unit.
 - Commands are sent with GATT write-with-response to handle `0x0006`, matching
-  the Mac transport behavior closely enough for stored-slot control.
+the Mac transport behavior closely enough for stored-slot control.
 - `Serial` is routed to USB via `ARDUINO_USB_MODE=1` and
-  `ARDUINO_USB_CDC_ON_BOOT=1` in `platformio.ini` for boot logging.
+`ARDUINO_USB_CDC_ON_BOOT=1` in `platformio.ini` for boot logging.
 - The target unit (`LED_BLE_2D84B28A`) is pinned by address in
-  `IPIXEL_MAC` (`config.h`) for direct connect; clear it to scan by name.
+`IPIXEL_MAC` (`config.h`) for direct connect; clear it to scan by name.
 - The current board has a small internal antenna already installed; do not
-  assume the antenna is missing. Treat iPixel issues as protocol/coexistence
-  problems until the diagnostic modes below isolate the failure.
+assume the antenna is missing. Treat iPixel issues as protocol/coexistence
+problems until the diagnostic modes below isolate the failure.
 
 ### Phase 2 — Result animations (complete)
 
 Wire play resolution to the correct iPixel slots.
 
 - [x] `resolvePlay()` returns a structured `PlayResult` (text + image token),
-      replacing fragile string matching
+  ```
+  replacing fragile string matching
+  ```
 - [x] Map outcomes to slots: homerun, double, single, foul, strike, flyout
 - [x] Trigger the animation immediately after `resolvePlay()` completes
 - [x] Add a "Next pitch" button in the web UI that calls `/api/reset`
 - [x] Parse JSON responses on the client so the UI no longer flashes raw JSON;
-      show the result and a clean status line, and hide controls once resolved
+  ```
+  show the result and a clean status line, and hide controls once resolved
+  ```
 - [x] iPixel reliably switches animation per play
 
 **Status:** The phone/game side is fully working — pitch/swing lock, resolution,
@@ -394,27 +400,27 @@ write-with-response.
 Current iPixel troubleshooting status:
 
 - The board already has a small internal antenna installed, so the previous
-  "missing antenna" conclusion was too narrow.
+"missing antenna" conclusion was too narrow.
 - `show_slot` bytes match the official `pypixelcolor` command exactly:
-  `0x07 0x00 0x08 0x80 0x01 0x00 <slot>`.
+`0x07 0x00 0x08 0x80 0x01 0x00 <slot>`.
 - `pypixelcolor` sends through Bleak with `response=True`. On ESP32/NimBLE,
-  write-with-response works when sent directly to raw handle `0x0006`; the
-  UUID-derived handle `0x0009` fails.
+write-with-response works when sent directly to raw handle `0x0006`; the
+UUID-derived handle `0x0009` fails.
 - Result commands are now loop-driven and non-blocking. During each result
-  burst, the firmware temporarily prefers BLE coexistence and restores balance
-  after the burst.
+burst, the firmware temporarily prefers BLE coexistence and restores balance
+after the burst.
 
 Notes:
 
 - `show_slot` (`0x07 0x00 0x08 0x80 0x01 0x00 <slot>`) matches `pypixelcolor`
-  exactly. If the requested slot is empty, the device falls back to cycling
-  through populated slots.
+exactly. If the requested slot is empty, the device falls back to cycling
+through populated slots.
 - Diagnostic mode 1 confirmed slots 1, 4, 7, and 10 switch correctly with
-  `IPIXEL_RAW_WRITE_HANDLE 0x0006`.
+`IPIXEL_RAW_WRITE_HANDLE 0x0006`.
 - Do not call blocking BLE reads/writes from the web-server request handler
-  task; a diagnostic `readValue()` there caused a load-access-fault crash.
+task; a diagnostic `readValue()` there caused a load-access-fault crash.
 - `triple` and `walk` slots are mapped in `showIPixelResult()` but not yet
-  produced by `resolvePlay()`; they are reserved for Phase 5 rules.
+produced by `resolvePlay()`; they are reserved for Phase 5 rules.
 
 Diagnostic test order:
 
@@ -423,27 +429,27 @@ Normal gameplay should use `IPIXEL_DIAGNOSTIC_MODE 0`,
 `IPIXEL_RAW_WRITE_HANDLE 0x0006`.
 
 1. Set `IPIXEL_DIAGNOSTIC_MODE` to `1` and flash. Wi-Fi is disabled and the
-   firmware cycles slots 1, 4, 7, and 10 from `loop()`. If this fails, focus on
+  firmware cycles slots 1, 4, 7, and 10 from `loop()`. If this fails, focus on
    protocol/slot contents.
 2. If mode 1 logs `rc=0` but the display ignores the slots, set
-   `IPIXEL_USE_AE_CHANNEL` to `1` and retest mode 1. This switches from
+  `IPIXEL_USE_AE_CHANNEL` to `1` and retest mode 1. This switches from
    documented `fa02`/`fa03` to the alternate `ae01`/`ae02` vendor channel shown
    in the GATT table.
 3. If the channel switch still fails, set `IPIXEL_WRITE_WITH_RESPONSE` to `1`
-   while staying in mode 1 and compare serial logs. Restore it to `0` afterward
+  while staying in mode 1 and compare serial logs. Restore it to `0` afterward
    unless it proves more reliable.
 4. Set `IPIXEL_REQUIRE_SLOT_ACK` to `1` while staying in mode 1. If the log
-   shows `iPixel command ack timeout`, the display is not accepting that
+  shows `iPixel command ack timeout`, the display is not accepting that
    channel/write mode even though NimBLE queued the packet.
 5. Set `IPIXEL_DIAG_HANDLE_SCAN` to `1` while staying in mode 1. The firmware
-   writes `show_slot` directly to handles `0x0005` through `0x000F`; if any
+  writes `show_slot` directly to handles `0x0005` through `0x000F`; if any
    handle produces an ACK or visible slot change, pin that handle in the iPixel
    transport.
 6. Set `IPIXEL_DIAGNOSTIC_MODE` to `2` and flash. Wi-Fi is active but phones are
-   not needed; the same slot cycle runs outside HTTP handlers. If mode 1 passes
+  not needed; the same slot cycle runs outside HTTP handlers. If mode 1 passes
    but mode 2 fails, focus on Wi-Fi/BLE coexistence.
 7. Return `IPIXEL_DIAGNOSTIC_MODE` to `0` and test normal two-phone gameplay. If
-   modes 1 and 2 pass but gameplay fails, focus on request timing or game-state
+  modes 1 and 2 pass but gameplay fails, focus on request timing or game-state
    dispatch.
 
 ### Phase 3 — Scoreboard state (complete)
@@ -464,10 +470,10 @@ the scoreboard; `/api/new-game` resets the full game state.
 Notes:
 
 - Singles advance runners one base, doubles two bases, and home runs score all
-  runners plus the batter.
+runners plus the batter.
 - Fouls add a strike only when the batter has fewer than two strikes.
 - Three strikes or any out result records an out; three outs clear the bases and
-  advance the half-inning.
+advance the half-inning.
 
 ### Phase 4 — iPixel scoreboard return flow (complete)
 
