@@ -1,3 +1,5 @@
+Logo
+
 # Pitch Battle
 
 Pitch Battle is a self-contained tabletop baseball game. Players connect their phones to a local Wi-Fi network, choose pitch and swing options, and the host resolves each at-bat. Results appear on the phones and on an external iPixel LED display.
@@ -528,4 +530,3 @@ pitch_battle/
   platformio.ini      Board and library dependencies
   LICENSE             MIT
 ```
-
