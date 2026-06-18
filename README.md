@@ -55,6 +55,8 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 - `platformio.ini` includes machine-specific serial ports; remove or change for your setup
 - iPixel result writes are BLE-write-without-response commands; use the diagnostic modes below when changing that code
 
+
+
 ---
 
 ## Hardware
