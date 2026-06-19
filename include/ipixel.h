@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "config.h"
+#include "scoreboard.h"
 
 #if ENABLE_IPIXEL
 
@@ -15,8 +16,8 @@ const char *ipixelAddress();
 bool ipixelShowSlot(uint8_t slot);
 bool ipixelShowSlotAtHandle(uint8_t slot, uint16_t handle, bool waitForAck);
 bool ipixelBusy();
-void showIPixelScoreboard();
-void showIPixelResult(const String &imageName);
+void showIPixelScoreboard(const ScoreboardState &state);
+void showIPixelResult(const String &imageName, const ScoreboardState &state);
 
 #else
 
@@ -30,7 +31,7 @@ inline const char *ipixelAddress() { return ""; }
 inline bool ipixelShowSlot(uint8_t) { return false; }
 inline bool ipixelShowSlotAtHandle(uint8_t, uint16_t, bool) { return false; }
 inline bool ipixelBusy() { return false; }
-inline void showIPixelScoreboard() {}
-inline void showIPixelResult(const String &) {}
+inline void showIPixelScoreboard(const ScoreboardState &) {}
+inline void showIPixelResult(const String &, const ScoreboardState &) {}
 
 #endif
