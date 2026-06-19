@@ -162,7 +162,7 @@
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/esp_hw_support/include/soc/esp32/spiram.h \
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/cores/esp32/io_pin_remap.h \
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/cores/esp32/Arduino.h \
- include/config.h \
+ include/config.h include/scoreboard.h \
  .pio/libdeps/esp32-c3-devkitm-1/NimBLE-Arduino/src/NimBLEDevice.h \
  .pio/libdeps/esp32-c3-devkitm-1/NimBLE-Arduino/src/nimconfig.h \
  .pio/libdeps/esp32-c3-devkitm-1/NimBLE-Arduino/src/nimconfig_rename.h \
@@ -237,4 +237,5 @@
  .pio/libdeps/esp32-c3-devkitm-1/NimBLE-Arduino/src/NimBLE2904.h \
  .pio/libdeps/esp32-c3-devkitm-1/NimBLE-Arduino/src/NimBLESecurity.h \
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/bt/include/esp32c3/include/esp_bt.h \
- /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/esp_wifi/include/esp_coexist.h
+ /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/esp_wifi/include/esp_coexist.h \
+ include/scoreboard_test_png.h

@@ -1,4 +1,5 @@
 #include "scoreboard.h"
+#include "esp32c3/rom/miniz.h"
 
 struct Rgb {
   uint8_t r;
@@ -8,14 +9,31 @@ struct Rgb {
 
 static constexpr Rgb COLOR_BLACK = {0, 0, 0};
 static constexpr Rgb COLOR_WHITE = {220, 235, 255};
-static constexpr Rgb COLOR_BLUE = {0, 70, 170};
-static constexpr Rgb COLOR_DIM = {45, 55, 70};
 static constexpr Rgb COLOR_YELLOW = {255, 190, 35};
 static constexpr Rgb COLOR_CYAN = {40, 210, 255};
-static constexpr Rgb COLOR_GREEN = {60, 255, 85};
+static constexpr Rgb COLOR_RED = {255, 0, 0};
 
 static uint8_t pixelBuffer[SCOREBOARD_RGB_BYTES];
 static uint8_t pngRawBuffer[SCOREBOARD_HEIGHT * (1 + SCOREBOARD_WIDTH * 3)];
+
+static const char *const SCOREBOARD_TEMPLATE[SCOREBOARD_HEIGHT] = {
+  ".....CC...C..C...C....CC......................WWWWWWWWWWWWWWWWWWWwWWWWWwWWWWWwWWWWWW#WWWWWWWWWW#",
+  ".....C.C.C.C.C...C...C...............##.......WW.................w.....w.....w.....W#W........W#",
+  ".....CC..CCC.C...C....C..............##.......WW.c.c.c..cc.c.ccc.w.....w.....w.....W#W........W#",
+  ".....C.C.C.C.C...C.....C............G..G......WW.c.c.c.c...c..c..w.....w.....w.....W#W........W#",
+  ".....CC..C.C.CCC.CCC.CC............G....G.....WW.c.c.c..c..c..c..w.....w.....w.....W#W........W#",
+  "......YY.YYY.YY..Y.Y.Y.YYY..YY....G......G....WW..c..c...c.c..c..w.....w.....w.....W#W........W#",
+  ".....Y....Y..Y.Y.Y.Y.Y.Y...Y.....G........G...WW..c..c.cc..c..c..w.....w.....w.....W#W........W#",
+  "......Y...Y..YY..Y.YY..YY...Y..W#..........##.Wwwwwwwwwwwwwwwwwwwpwwwwwpwwwwwpwwwwww#wwwwwwwwww#",
+  ".......Y..Y..Y.Y.Y.Y.Y.Y.....Y.W#....##....##.WW.................w.....w.....w.....W#W........W#",
+  ".....YY...Y..Y.Y.Y.Y.Y.YYY.YY....G........G...WW.Y.Y..Y..Y.Y.YYY.w.....w.....w.....W#W........W#",
+  "......C..C.C.CCC..CC..............G......G....WW.Y.Y.Y.Y.YYY.Y...w.....w.....w.....W#W........W#",
+  ".....C.C.C.C..C..C.................G....G.....WW.YYY.Y.Y.YYY.YY..w.....w.....w.....W#W........W#",
+  ".....C.C.C.C..C...C.................G..G......WW.Y.Y.Y.Y.Y.Y.Y...w.....w.....w.....W#W........W#",
+  ".....C.C.C.C..C....C.................##.......WW.Y.Y..Y..Y.Y.YYY.w.....w.....w.....W#W........W#",
+  "......C...C...C..CC..................##.......WWWwWwWWWWWwWwWW#WWwWWWWWwWWWWWwWWWWWW#WWWWWWWWWW#",
+  "..............................................W#################################################"
+};
 
 static const uint8_t GLYPH_SPACE[5] = {
   0b000,
@@ -80,107 +98,85 @@ static void drawChar(uint8_t x, uint8_t y, char c, Rgb color) {
   }
 }
 
-static uint8_t drawText(uint8_t x, uint8_t y, const char *text, Rgb color) {
-  while (*text != '\0' && x < SCOREBOARD_WIDTH) {
-    drawChar(x, y, *text, color);
-    x += 4;
-    text++;
+static Rgb templateColor(char c) {
+  switch (c) {
+    case 'C': return {38, 188, 200};
+    case 'c': return {24, 136, 145};
+    case 'W': return {251, 251, 251};
+    case 'w': return {247, 247, 247};
+    case '#': return {255, 255, 255};
+    case 'p': return {239, 239, 239};
+    case 'Y': return {225, 246, 47};
+    case 'G': return {0, 255, 18};
+    default: return COLOR_BLACK;
   }
-  return x;
 }
 
-static uint8_t appendNumber(char *out, uint8_t value) {
-  if (value >= 100) {
-    out[0] = '9';
-    out[1] = '9';
-    return 2;
-  }
-
-  if (value >= 10) {
-    out[0] = '0' + value / 10;
-    out[1] = '0' + value % 10;
-    return 2;
-  }
-
-  out[0] = '0' + value;
-  return 1;
-}
-
-static void buildScoreText(const ScoreboardState &state, char *out, size_t outSize) {
-  if (outSize < 16) {
-    if (outSize > 0) out[0] = '\0';
-    return;
-  }
-
-  uint8_t pos = 0;
-  out[pos++] = 'A';
-  pos += appendNumber(out + pos, state.awayScore);
-  out[pos++] = ' ';
-  out[pos++] = 'H';
-  pos += appendNumber(out + pos, state.homeScore);
-  out[pos++] = ' ';
-  out[pos++] = state.topHalf ? 'T' : 'B';
-  pos += appendNumber(out + pos, state.inning);
-  out[pos] = '\0';
-}
-
-static void buildCountText(const ScoreboardState &state, char *out, size_t outSize) {
-  if (outSize < 14) {
-    if (outSize > 0) out[0] = '\0';
-    return;
-  }
-
-  uint8_t pos = 0;
-  out[pos++] = 'B';
-  pos += appendNumber(out + pos, state.balls);
-  out[pos++] = ' ';
-  out[pos++] = 'S';
-  pos += appendNumber(out + pos, state.strikes);
-  out[pos++] = ' ';
-  out[pos++] = 'O';
-  pos += appendNumber(out + pos, state.outs);
-  out[pos] = '\0';
-}
-
-static void fillBackground() {
+static void drawTemplate() {
   for (uint8_t y = 0; y < SCOREBOARD_HEIGHT; y++) {
     for (uint8_t x = 0; x < SCOREBOARD_WIDTH; x++) {
-      putPixel(x, y, COLOR_BLACK);
+      putPixel(x, y, templateColor(SCOREBOARD_TEMPLATE[y][x]));
     }
-  }
-
-  for (uint8_t x = 0; x < SCOREBOARD_WIDTH; x++) {
-    putPixel(x, 7, COLOR_BLUE);
   }
 }
 
-static void drawBaseMarker(uint8_t cx, uint8_t cy, bool occupied) {
-  const Rgb color = occupied ? COLOR_GREEN : COLOR_DIM;
-  putPixel(cx, cy - 1, color);
-  putPixel(cx - 1, cy, color);
-  putPixel(cx, cy, color);
-  putPixel(cx + 1, cy, color);
-  putPixel(cx, cy + 1, color);
+static void fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, Rgb color) {
+  for (uint8_t yy = 0; yy < h; yy++) {
+    for (uint8_t xx = 0; xx < w; xx++) {
+      putPixel(x + xx, y + yy, color);
+    }
+  }
+}
+
+static void drawBaseBox(uint8_t x, uint8_t y, bool occupied) {
+  fillRect(x, y, 2, 2, occupied ? COLOR_RED : COLOR_WHITE);
+}
+
+static void drawSingleDigit(uint8_t x, uint8_t y, uint8_t value, Rgb color) {
+  drawChar(x, y, '0' + min((uint8_t)9, value), color);
+}
+
+static void drawTotal(uint8_t x, uint8_t y, uint8_t value, Rgb color) {
+  value = min((uint8_t)99, value);
+  if (value < 10) {
+    drawSingleDigit(x + 2, y, value, color);
+    return;
+  }
+
+  drawSingleDigit(x, y, value / 10, color);
+  drawSingleDigit(x + 4, y, value % 10, color);
+}
+
+static void drawScoreRow(
+  uint8_t y,
+  const uint8_t inningRuns[3],
+  uint8_t total,
+  Rgb color
+) {
+  fillRect(66, y, 5, 6, COLOR_BLACK);
+  fillRect(72, y, 5, 6, COLOR_BLACK);
+  fillRect(78, y, 5, 6, COLOR_BLACK);
+  fillRect(86, y, 8, 6, COLOR_BLACK);
+
+  drawSingleDigit(67, y, inningRuns[0], color);
+  drawSingleDigit(73, y, inningRuns[1], color);
+  drawSingleDigit(79, y, inningRuns[2], color);
+  drawTotal(87, y, total, color);
 }
 
 static void renderFramebuffer(const ScoreboardState &state) {
-  fillBackground();
+  drawTemplate();
 
-  char score[16];
-  char count[14];
-  buildScoreText(state, score, sizeof(score));
-  buildCountText(state, count, sizeof(count));
+  drawSingleDigit(0, 0, state.balls, COLOR_CYAN);
+  drawSingleDigit(0, 5, state.strikes, COLOR_YELLOW);
+  drawSingleDigit(0, 10, state.outs, COLOR_CYAN);
 
-  uint8_t x = drawText(1, 1, score, COLOR_YELLOW);
-  while (x < 60) {
-    x += 4;
-  }
-  drawText(x, 1, state.topHalf ? "T" : "B", COLOR_WHITE);
+  drawBaseBox(37, 1, state.runnerSecond);
+  drawBaseBox(43, 7, state.runnerFirst);
+  drawBaseBox(31, 7, state.runnerThird);
 
-  drawText(1, 9, count, COLOR_CYAN);
-  drawBaseMarker(84, 12, state.runnerThird);
-  drawBaseMarker(89, 10, state.runnerSecond);
-  drawBaseMarker(94, 12, state.runnerFirst);
+  drawScoreRow(1, state.awayInningRuns, state.awayScore, COLOR_CYAN);
+  drawScoreRow(9, state.homeInningRuns, state.homeScore, COLOR_YELLOW);
 }
 
 static uint32_t crc32Update(uint32_t crc, const uint8_t *data, size_t length) {
@@ -264,6 +260,18 @@ static bool writeChunk(
   return writeBE32(out, capacity, pos, crc);
 }
 
+static size_t buildZlibCompressedBlock(
+  uint8_t *out,
+  size_t capacity,
+  const uint8_t *data,
+  size_t length
+) {
+  const int flags =
+    TDEFL_WRITE_ZLIB_HEADER |
+    TDEFL_DEFAULT_MAX_PROBES;
+  return tdefl_compress_mem_to_mem(out, capacity, data, length, flags);
+}
+
 static size_t buildZlibStoredBlock(
   uint8_t *out,
   size_t capacity,
@@ -305,6 +313,29 @@ size_t renderScoreboardPng(
 
   renderFramebuffer(state);
 
+  size_t minizPngLength = 0;
+  void *minizPng = tdefl_write_image_to_png_file_in_memory_ex(
+    pixelBuffer,
+    SCOREBOARD_WIDTH,
+    SCOREBOARD_HEIGHT,
+    3,
+    &minizPngLength,
+    6,
+    false
+  );
+  if (minizPng != nullptr && minizPngLength > 0 && minizPngLength <= outCapacity) {
+    memcpy(out, minizPng, minizPngLength);
+    mz_free(minizPng);
+    Serial.print("Scoreboard PNG: png=");
+    Serial.print(minizPngLength);
+    Serial.println(" mode=miniz-png");
+    return minizPngLength;
+  }
+  if (minizPng != nullptr) {
+    mz_free(minizPng);
+  }
+  Serial.println("Scoreboard PNG: miniz-png failed; using fallback encoder");
+
   size_t rawPos = 0;
   for (uint8_t y = 0; y < SCOREBOARD_HEIGHT; y++) {
     pngRawBuffer[rawPos++] = 0x00;
@@ -316,9 +347,14 @@ size_t renderScoreboardPng(
     rawPos += SCOREBOARD_WIDTH * 3;
   }
 
-  static uint8_t idatBuffer[sizeof(pngRawBuffer) + 11];
-  const size_t idatLength =
-    buildZlibStoredBlock(idatBuffer, sizeof(idatBuffer), pngRawBuffer, rawPos);
+  static uint8_t idatBuffer[SCOREBOARD_PNG_MAX_BYTES];
+  size_t idatLength =
+    buildZlibCompressedBlock(idatBuffer, sizeof(idatBuffer), pngRawBuffer, rawPos);
+  bool compressed = idatLength != 0;
+  if (idatLength == 0) {
+    idatLength =
+      buildZlibStoredBlock(idatBuffer, sizeof(idatBuffer), pngRawBuffer, rawPos);
+  }
   if (idatLength == 0) {
     return 0;
   }
@@ -346,6 +382,15 @@ size_t renderScoreboardPng(
   if (!writeChunk(out, outCapacity, pos, "IEND", nullptr, 0)) {
     return 0;
   }
+
+  Serial.print("Scoreboard PNG: raw=");
+  Serial.print(rawPos);
+  Serial.print(" idat=");
+  Serial.print(idatLength);
+  Serial.print(" png=");
+  Serial.print(pos);
+  Serial.print(" mode=");
+  Serial.println(compressed ? "compressed" : "stored");
 
   return pos;
 }

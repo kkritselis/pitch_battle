@@ -189,7 +189,7 @@
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/libraries/DNSServer/src/DNSServer.h \
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFiUdp.h \
  .pio/libdeps/esp32-c3-devkitm-1/QRCode/src/qrcode.h include/config.h \
- include/ipixel.h \
+ include/ipixel.h include/scoreboard.h \
  .pio/libdeps/esp32-c3-devkitm-1/GFX\ Library\ for\ Arduino/src/Arduino_GFX_Library.h \
  .pio/libdeps/esp32-c3-devkitm-1/GFX\ Library\ for\ Arduino/src/Arduino_DataBus.h \
  .pio/libdeps/esp32-c3-devkitm-1/GFX\ Library\ for\ Arduino/src/YCbCr2RGB.h \

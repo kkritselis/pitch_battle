@@ -38,6 +38,7 @@ String resultText = "";
 String currentImage = "waiting";
 String pendingIPixelImage = "";
 bool pendingIPixelResult = false;
+bool pendingIPixelScoreboard = false;
 uint32_t lastDiagnosticSlotMs = 0;
 uint8_t diagnosticSlotIndex = 0;
 uint16_t diagnosticHandle = IPIXEL_DIAG_HANDLE_START;
@@ -76,9 +77,30 @@ struct GameState {
   bool runnerFirst = false;
   bool runnerSecond = false;
   bool runnerThird = false;
+  uint8_t awayInningRuns[3] = {0, 0, 0};
+  uint8_t homeInningRuns[3] = {0, 0, 0};
 };
 
 GameState gameState;
+
+ScoreboardState currentScoreboardState() {
+  ScoreboardState state;
+  state.inning = gameState.inning;
+  state.topHalf = gameState.topHalf;
+  state.homeScore = gameState.homeScore;
+  state.awayScore = gameState.awayScore;
+  state.balls = gameState.balls;
+  state.strikes = gameState.strikes;
+  state.outs = gameState.outs;
+  state.runnerFirst = gameState.runnerFirst;
+  state.runnerSecond = gameState.runnerSecond;
+  state.runnerThird = gameState.runnerThird;
+  for (uint8_t i = 0; i < 3; i++) {
+    state.awayInningRuns[i] = gameState.awayInningRuns[i];
+    state.homeInningRuns[i] = gameState.homeInningRuns[i];
+  }
+  return state;
+}
 
 String pageHtml() {
   return R"HTML(
@@ -393,6 +415,19 @@ uint8_t &battingScore() {
   return gameState.topHalf ? gameState.awayScore : gameState.homeScore;
 }
 
+void addBattingInningRun() {
+  if (gameState.inning < 1 || gameState.inning > 3) {
+    return;
+  }
+
+  const uint8_t index = gameState.inning - 1;
+  if (gameState.topHalf) {
+    gameState.awayInningRuns[index]++;
+  } else {
+    gameState.homeInningRuns[index]++;
+  }
+}
+
 void resetCount() {
   gameState.balls = 0;
   gameState.strikes = 0;
@@ -428,6 +463,7 @@ void addOut() {
 
 void scoreRun() {
   battingScore()++;
+  addBattingInningRun();
 }
 
 void advanceRunners(uint8_t batterBases) {
@@ -637,6 +673,7 @@ void handleNewGame() {
   currentImage = "waiting";
   pendingIPixelImage = "";
   pendingIPixelResult = false;
+  pendingIPixelScoreboard = true;
   resetGameState();
 
   server.send(200, "application/json", getStateJson());
@@ -653,8 +690,18 @@ void processPendingIPixelResult() {
 
   Serial.print("iPixel pending result dispatch: ");
   Serial.println(pendingIPixelImage);
-  showIPixelResult(pendingIPixelImage);
+  showIPixelResult(pendingIPixelImage, currentScoreboardState());
   pendingIPixelResult = false;
+}
+
+void processPendingIPixelScoreboard() {
+  if (!pendingIPixelScoreboard || ipixelBusy()) {
+    return;
+  }
+
+  Serial.println("iPixel pending live scoreboard dispatch");
+  showIPixelScoreboard(currentScoreboardState());
+  pendingIPixelScoreboard = false;
 }
 
 void runIPixelDiagnosticCycle() {
@@ -817,6 +864,7 @@ void loop() {
   dnsServer.processNextRequest();
   server.handleClient();
   processPendingIPixelResult();
+  processPendingIPixelScoreboard();
 
 #if IPIXEL_DIAGNOSTIC_MODE == 2
   runIPixelDiagnosticCycle();

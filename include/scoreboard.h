@@ -18,6 +18,8 @@ struct ScoreboardState {
   bool runnerFirst = false;
   bool runnerSecond = false;
   bool runnerThird = false;
+  uint8_t awayInningRuns[3] = {0, 0, 0};
+  uint8_t homeInningRuns[3] = {0, 0, 0};
 };
 
 size_t renderScoreboardPng(
