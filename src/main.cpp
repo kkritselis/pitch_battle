@@ -32,6 +32,12 @@ const byte DNS_PORT = 53;
 bool pitchLocked = false;
 bool swingLocked = false;
 
+// Team assignment: first phone to join is home, second is away. Tokens are
+// client-generated so a page reload reclaims the same team instead of taking a
+// new slot.
+String homeToken = "";
+String awayToken = "";
+
 String pitchValue = "";
 String swingValue = "";
 String resultText = "";
@@ -189,8 +195,8 @@ String pageHtml() {
     <p class="muted">ESP32 host is running. This is the first local app screen.</p>
 
     <div id="role">
-      <button onclick="join('pitcher')">Join as Pitcher</button>
-      <button onclick="join('hitter')">Join as Hitter</button>
+      <button onclick="joinGame()">Join Game</button>
+      <p id="joinMsg" class="muted"></p>
     </div>
 
     <div id="controls" style="display:none">
@@ -248,21 +254,43 @@ String pageHtml() {
   </main>
 
 <script>
+let team = "";
 let role = "";
 
-function join(nextRole) {
-  role = nextRole;
+function clientId() {
+  let id = localStorage.getItem("pitchBattleId");
+  if (!id) {
+    id = "p-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem("pitchBattleId", id);
+  }
+  return id;
+}
+
+function roleForHalf(half) {
+  if (half === "top") {
+    return team === "home" ? "pitcher" : "hitter";
+  }
+  return team === "home" ? "hitter" : "pitcher";
+}
+
+async function joinGame() {
+  const joinMsg = document.getElementById("joinMsg");
+  joinMsg.textContent = "Joining...";
+  try {
+    const res = await postJson("/api/join", {token: clientId()});
+    if (!res || res.team === "full") {
+      joinMsg.textContent = "Game is full. Two players have already joined.";
+      return;
+    }
+    team = res.team;
+  } catch (err) {
+    joinMsg.textContent = "Could not join. Try again.";
+    console.log(err);
+    return;
+  }
+
   document.getElementById("role").style.display = "none";
   document.getElementById("controls").style.display = "block";
-  document.getElementById("roleTitle").textContent =
-    role === "pitcher" ? "Pitcher Controls" : "Hitter Controls";
-
-  document.getElementById("pitcherControls").style.display =
-    role === "pitcher" ? "grid" : "none";
-
-  document.getElementById("hitterControls").style.display =
-    role === "hitter" ? "grid" : "none";
-
   refreshState();
 }
 
@@ -281,6 +309,15 @@ function renderState(state) {
   const playControls = document.getElementById("playControls");
   const hasResult = state.result && state.pitchLocked && state.swingLocked;
   const halfText = state.half === "top" ? "Top" : "Bottom";
+
+  role = roleForHalf(state.half);
+  const teamLabel = team === "home" ? "Home" : "Away";
+  const roleLabel = role === "pitcher" ? "Pitching" : "Batting";
+  document.getElementById("roleTitle").textContent = `${teamLabel} - ${roleLabel}`;
+  document.getElementById("pitcherControls").style.display =
+    role === "pitcher" ? "grid" : "none";
+  document.getElementById("hitterControls").style.display =
+    role === "hitter" ? "grid" : "none";
   const outText = state.outs === 1 ? "out" : "outs";
   const bases =
     (state.runnerFirst ? "1" : "-") +
@@ -324,17 +361,29 @@ function renderState(state) {
 async function submitPitch() {
   const data = {
     height: document.getElementById("pitchHeight").value,
-    speed: document.getElementById("pitchSpeed").value
+    speed: document.getElementById("pitchSpeed").value,
+    token: clientId()
   };
-  renderState(await postJson("/api/pitch", data));
+  const res = await postJson("/api/pitch", data);
+  if (res.error) {
+    document.getElementById("status").textContent = res.error;
+    return;
+  }
+  renderState(res);
 }
 
 async function submitSwing() {
   const data = {
     height: document.getElementById("swingHeight").value,
-    timing: document.getElementById("swingTiming").value
+    timing: document.getElementById("swingTiming").value,
+    token: clientId()
   };
-  renderState(await postJson("/api/swing", data));
+  const res = await postJson("/api/swing", data);
+  if (res.error) {
+    document.getElementById("status").textContent = res.error;
+    return;
+  }
+  renderState(res);
 }
 
 async function nextPitch() {
@@ -348,7 +397,7 @@ async function newGame() {
 }
 
 async function refreshState() {
-  if (!role) return;
+  if (!team) return;
   try {
     const res = await fetch("/api/state");
     renderState(await res.json());
@@ -539,10 +588,21 @@ void resetGameState() {
 void checkResolve();
 String getStateJson();
 PlayResult resolvePlay(String pitch, String swing);
+String jsonStringValue(const String &body, const char *key);
+String teamForToken(const String &token);
+String pitchingTeam();
+String battingTeam();
 
 void handlePitch() {
+  String body = server.arg("plain");
+  if (teamForToken(jsonStringValue(body, "token")) != pitchingTeam()) {
+    server.send(403, "application/json",
+      "{\"error\":\"Not your turn to pitch.\"}");
+    return;
+  }
+
   pitchLocked = true;
-  pitchValue = server.arg("plain");
+  pitchValue = jsonStringValue(body, "height") + " " + jsonStringValue(body, "speed");
 
   Serial.println("Pitch locked:");
   Serial.println(pitchValue);
@@ -553,8 +613,15 @@ void handlePitch() {
 }
 
 void handleSwing() {
+  String body = server.arg("plain");
+  if (teamForToken(jsonStringValue(body, "token")) != battingTeam()) {
+    server.send(403, "application/json",
+      "{\"error\":\"Not your turn to bat.\"}");
+    return;
+  }
+
   swingLocked = true;
-  swingValue = server.arg("plain");
+  swingValue = jsonStringValue(body, "height") + " " + jsonStringValue(body, "timing");
 
   Serial.println("Swing locked:");
   Serial.println(swingValue);
@@ -681,6 +748,61 @@ void handleNewGame() {
 
 void handleState() {
   server.send(200, "application/json", getStateJson());
+}
+
+String jsonStringValue(const String &body, const char *key) {
+  String needle = String("\"") + key + "\"";
+  int k = body.indexOf(needle);
+  if (k < 0) return "";
+  int colon = body.indexOf(':', k + needle.length());
+  if (colon < 0) return "";
+  int q1 = body.indexOf('"', colon);
+  if (q1 < 0) return "";
+  int q2 = body.indexOf('"', q1 + 1);
+  if (q2 < 0) return "";
+  return body.substring(q1 + 1, q2);
+}
+
+String teamForToken(const String &token) {
+  if (token.length() == 0) return "";
+  if (token == homeToken) return "home";
+  if (token == awayToken) return "away";
+  return "";
+}
+
+// In the top half the home team pitches and away bats; they swap in the bottom.
+String pitchingTeam() {
+  return gameState.topHalf ? "home" : "away";
+}
+
+String battingTeam() {
+  return gameState.topHalf ? "away" : "home";
+}
+
+void handleJoin() {
+  String token = jsonStringValue(server.arg("plain"), "token");
+
+  String team;
+  if (token.length() > 0 && token == homeToken) {
+    team = "home";
+  } else if (token.length() > 0 && token == awayToken) {
+    team = "away";
+  } else if (homeToken.length() == 0) {
+    homeToken = token;
+    team = "home";
+  } else if (awayToken.length() == 0) {
+    awayToken = token;
+    team = "away";
+  } else {
+    team = "full";
+  }
+
+  Serial.print("Join request token=");
+  Serial.print(token);
+  Serial.print(" -> ");
+  Serial.println(team);
+
+  server.send(200, "application/json", "{\"team\":\"" + team + "\"}");
 }
 
 void processPendingIPixelResult() {
@@ -813,6 +935,7 @@ void setup() {
   server.on("/api/new-game", HTTP_POST, handleNewGame);
 
   server.on("/", HTTP_GET, handleRoot);
+  server.on("/api/join", HTTP_POST, handleJoin);
   server.on("/api/pitch", HTTP_POST, handlePitch);
   server.on("/api/swing", HTTP_POST, handleSwing);
 

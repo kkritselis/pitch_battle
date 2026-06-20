@@ -35,8 +35,9 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 - **Wi-Fi access point** — SSID `PitchBattle`, password `pitchbattle`
 - **Captive portal** — DNS redirect plus probe routes for Android and iOS
 - **Round LCD** — QR code and connection info on boot (GC9A01, 240x240)
-- **Web app** — Pitcher and hitter phone screens (HTML/CSS/JS embedded in firmware)
-- **REST API** — Pitch, swing, state, and reset endpoints
+- **Web app** — Single Join Game screen with team-based pitch/bat controls (HTML/CSS/JS embedded in firmware)
+- **Team assignment** — First phone to join is Home, second is Away; roles follow the inning half
+- **REST API** — Join, pitch, swing, state, and reset endpoints
 - **At-bat resolution** — `resolvePlay()` compares pitch height/speed to swing height/timing
 - **Shared game state** — pitch/swing locks, inning, score, count, outs, and base runners
 - **iPixel BLE client** — NimBLE scan/connect, raw ATT writes, logo on boot, result animations, and live scoreboard image push (`src/ipixel.cpp`)
@@ -46,7 +47,7 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 ### Not yet implemented
 
 - **Full baseball rules** — Core count, base advancement, scoring, and inning changes exist; advanced plays are still simplified
-- **Player persistence** — No session or role assignment beyond what each phone keeps in memory
+- **Player persistence** — Team is claimed with a `localStorage` token (survives reload), but there is no account system or reconnection grace period
 
 ### Known rough edges
 
@@ -96,7 +97,8 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 
 - Connect to the `PitchBattle` Wi-Fi network
 - Open the captive portal or browse to `http://192.168.4.1`
-- One phone as pitcher, one as hitter
+- Tap Join Game: the first phone becomes Home, the second becomes Away
+- Roles follow the inning half (top: Home pitches, Away bats; bottom: they swap)
 
 ---
 
@@ -105,7 +107,7 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 ### Today
 
 ```text
-  Phone (Pitcher)              Phone (Hitter)
+  Phone (Home team)            Phone (Away team)
          |                            |
          +------------+---------------+
                       |
@@ -127,7 +129,7 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 ### Target
 
 ```text
-  Phone (Pitcher)              Phone (Hitter)
+  Phone (Home team)            Phone (Away team)
          |                            |
          +------------+---------------+
                       |
@@ -171,22 +173,52 @@ After flashing:
 ## API
 
 
-| Method | Path            | Description                          |
-| ------ | --------------- | ------------------------------------ |
-| `GET`  | `/`             | Game web UI                          |
-| `GET`  | `/api/state`    | Current game state (JSON)            |
-| `POST` | `/api/pitch`    | Lock pitcher selection (JSON body)   |
-| `POST` | `/api/swing`    | Lock hitter selection (JSON body)    |
-| `POST` | `/api/reset`    | Reset locks and start a new at-bat   |
-| `POST` | `/api/new-game` | Reset the full scoreboard/game state |
+| Method | Path            | Description                                   |
+| ------ | --------------- | --------------------------------------------- |
+| `GET`  | `/`             | Game web UI                                   |
+| `POST` | `/api/join`     | Claim a team (Home first, then Away)          |
+| `GET`  | `/api/state`    | Current game state (JSON)                     |
+| `POST` | `/api/pitch`    | Lock pitch selection (pitching team only)     |
+| `POST` | `/api/swing`    | Lock swing selection (batting team only)      |
+| `POST` | `/api/reset`    | Reset locks and start a new at-bat            |
+| `POST` | `/api/new-game` | Reset the full scoreboard/game state          |
 
+
+### Teams and roles
+
+Each phone generates a random `token` (stored in `localStorage`) and posts it to
+`/api/join`. The first token claims **Home**, the second claims **Away**, and any
+further phone receives `{"team":"full"}`. A reload reuses the saved token, so a
+phone reclaims its own team instead of taking the other slot.
+
+Roles are derived from the team and the inning half, not chosen by the player:
+
+| Half   | Home  | Away  |
+| ------ | ----- | ----- |
+| Top    | Pitch | Bat   |
+| Bottom | Bat   | Pitch |
+
+The server enforces this: `/api/pitch` is rejected with `403` unless the token
+belongs to the pitching team, and `/api/swing` is rejected unless it belongs to
+the batting team. The rejection body is `{"error":"..."}`.
+
+### Join body
+
+```json
+{
+  "token": "p-ab12cd34"
+}
+```
+
+Response: `{"team":"home"}`, `{"team":"away"}`, or `{"team":"full"}`.
 
 ### Pitch body
 
 ```json
 {
   "height": "high",
-  "speed": "fast"
+  "speed": "fast",
+  "token": "p-ab12cd34"
 }
 ```
 
@@ -198,7 +230,8 @@ After flashing:
 ```json
 {
   "height": "middle",
-  "timing": "medium"
+  "timing": "medium",
+  "token": "p-ab12cd34"
 }
 ```
 
@@ -562,8 +595,8 @@ Expand beyond single at-bat outcomes.
 1. ESP32 powers on
 2. Logo appears on the iPixel
 3. QR code appears on the round LCD
-4. Players scan, join Wi-Fi, and open the game
-5. Pitcher and hitter lock their choices
+4. Players scan, join Wi-Fi, and tap Join Game (Home then Away)
+5. The pitching and batting teams lock their choices for the half
 6. ESP32 resolves the play
 7. iPixel shows the result animation
 8. Scoreboard updates

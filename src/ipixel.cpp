@@ -604,10 +604,15 @@ static bool ipixelSendImageBytes(
     delay(4);
   }
 
-  if (!ipixelWaitForAck(8000)) {
-    Serial.println("iPixel live image ack timeout");
+  if (!ipixelWaitForAck(IPIXEL_REQUIRE_IMAGE_ACK ? 8000 : 1500)) {
     ipixelAckPending = false;
+#if IPIXEL_REQUIRE_IMAGE_ACK
+    Serial.println("iPixel live image ack timeout");
     return false;
+#else
+    Serial.println("iPixel live image sent (no ACK; assuming displayed)");
+    return true;
+#endif
   }
 
   Serial.println("iPixel live image ACK received");
@@ -669,10 +674,15 @@ static bool ipixelSendImageBytesViaCharacteristic(
     delay(4);
   }
 
-  if (!ipixelWaitForAck(8000)) {
-    Serial.println("iPixel live image char ack timeout");
+  if (!ipixelWaitForAck(IPIXEL_REQUIRE_IMAGE_ACK ? 8000 : 1500)) {
     ipixelAckPending = false;
+#if IPIXEL_REQUIRE_IMAGE_ACK
+    Serial.println("iPixel live image char ack timeout");
     return false;
+#else
+    Serial.println("iPixel live image char sent (no ACK; assuming displayed)");
+    return true;
+#endif
   }
 
   Serial.println("iPixel live image char ACK received");
@@ -689,25 +699,22 @@ static bool ipixelSendImageBytes(
   const uint16_t imageHandle =
     IPIXEL_IMAGE_RAW_WRITE_HANDLE != 0 ? IPIXEL_IMAGE_RAW_WRITE_HANDLE : commandHandle;
 
-  if (ipixelSendImageBytesViaCharacteristic(fileBytes, fileLength, saveSlot)) {
-    return true;
-  }
-
-  Serial.println("iPixel image characteristic path failed; trying raw handle");
-
   if (ipixelSendImageBytes(fileBytes, fileLength, saveSlot, imageHandle)) {
     return true;
   }
 
-  if (imageHandle == commandHandle) {
-    return false;
+  if (imageHandle != commandHandle) {
+    Serial.print("iPixel image handle 0x");
+    Serial.print(imageHandle, HEX);
+    Serial.print(" failed; trying command handle 0x");
+    Serial.println(commandHandle, HEX);
+    if (ipixelSendImageBytes(fileBytes, fileLength, saveSlot, commandHandle)) {
+      return true;
+    }
   }
 
-  Serial.print("iPixel image handle 0x");
-  Serial.print(imageHandle, HEX);
-  Serial.print(" failed; trying command handle 0x");
-  Serial.println(commandHandle, HEX);
-  return ipixelSendImageBytes(fileBytes, fileLength, saveSlot, commandHandle);
+  Serial.println("iPixel raw image path failed; trying characteristic");
+  return ipixelSendImageBytesViaCharacteristic(fileBytes, fileLength, saveSlot);
 }
 
 static bool ipixelPushScoreboardImage() {

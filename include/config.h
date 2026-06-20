@@ -54,9 +54,13 @@
 // Image uploads may use a different FA02 value handle than show_slot commands.
 // 0 = use IPIXEL_RAW_WRITE_HANDLE for image frames too.
 #define IPIXEL_IMAGE_RAW_WRITE_HANDLE 0
+// This unit accepts the image window and displays it, but never returns a notify
+// ACK on the ESP32 link. 0 = treat a fully-written window as success even when no
+// ACK arrives (avoids the slot-9 fallback overwriting the live image).
+#define IPIXEL_REQUIRE_IMAGE_ACK 0
 // Diagnostic: send a known-good Pillow-compressed scoreboard PNG from flash.
 // If this ACKs, image framing works and runtime PNG compression is the blocker.
-#define IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG 1
+#define IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG 0
 
 // Devices advertise as LED_BLE_<id>. Leave IPIXEL_MAC empty to scan by name.
 #define IPIXEL_DEVICE_PREFIX "LED_BLE_"
