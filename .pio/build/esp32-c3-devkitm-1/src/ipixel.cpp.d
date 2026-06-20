@@ -237,4 +237,5 @@
  .pio/libdeps/esp32-c3-devkitm-1/NimBLE-Arduino/src/NimBLE2904.h \
  .pio/libdeps/esp32-c3-devkitm-1/NimBLE-Arduino/src/NimBLESecurity.h \
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/bt/include/esp32c3/include/esp_bt.h \
- /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/esp_wifi/include/esp_coexist.h
+ /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/esp_wifi/include/esp_coexist.h \
+ include/ipixel_scroll_text.h

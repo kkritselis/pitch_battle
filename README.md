@@ -21,7 +21,7 @@ This repo is a **rebuild** of an earlier Mac-based prototype.
 | Round LCD QR code | Not part of prototype        | GC9A01 display on ESP32                  |
 | Game logic        | Node                         | `resolvePlay()` in firmware              |
 | iPixel display    | Node BLE client (working)    | ESP32 BLE client with live scoreboard    |
-| Animation uploads | Done via Mac tooling         | Slots already loaded on display hardware |
+| Animation uploads | Done via Mac tooling         | GIF slots via `setup/storeImages.py`; scoreboard live on slot 5 |
 
 
 The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE control. This repo moves that stack onto the ESP32 so the game can run standalone. iPixel protocol details and slot assignments below come from the prototype work and are the reference for porting BLE into firmware.
@@ -37,11 +37,14 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 - **Round LCD** — QR code and connection info on boot (GC9A01, 240x240)
 - **Web app** — Single Join Game screen with team-based pitch/bat controls (HTML/CSS/JS embedded in firmware)
 - **Team assignment** — First phone to join is Home, second is Away; roles follow the inning half
-- **REST API** — Join, pitch, swing, state, and reset endpoints
+- **Server-side role enforcement** — Only the pitching team can lock a pitch; only the batting team can lock a swing
+- **REST API** — Join, pitch, swing, state, reset, and new-game endpoints
 - **At-bat resolution** — `resolvePlay()` compares pitch height/speed to swing height/timing
 - **Shared game state** — pitch/swing locks, inning, score, count, outs, and base runners
-- **iPixel BLE client** — NimBLE scan/connect, raw ATT writes, logo on boot, result animations, and live scoreboard image push (`src/ipixel.cpp`)
-- **Dynamic iPixel scoreboard** — firmware renders a 96x16 PNG from game state and pushes it after result animations
+- **Walks and strikeouts** — Four balls advances the batter; three strikes records an out
+- **iPixel BLE client** — NimBLE scan/connect, raw ATT writes, logo on boot, result animations, and live scoreboard
+- **Dynamic iPixel scoreboard** — firmware renders a 96x16 PNG from game state, pushes it to slot 5, then calls `show_slot(5)`
+- **Scroll text for walk/strikeout** — `"WALK"` and `"STRIKEOUT"` scroll across the panel instead of using stored GIF slots
 - **Next-pitch flow** — Web UI reset button calls `/api/reset` after a resolved play
 
 ### Not yet implemented
@@ -54,20 +57,8 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 - `resultText` is not escaped when building JSON responses
 - `platformio.ini` includes machine-specific serial ports; remove or change for your setup
 - iPixel writes depend on raw ATT handle `0x0006` for this unit; use the diagnostic modes below when changing BLE code
-- **iPixel image ACK never arrives on this link**: the panel does receive and
-  display the pushed PNG, but no notify ACK (`0x05 ... code`) comes back, so the
-  firmware currently times out and falls back to slot 9, overwriting the live
-  image. The notify channel (`fa03`) has never produced a packet on the ESP32
-  connection, even for the device-info handshake. Next step is to stop treating
-  the missing ACK as a failure (and skip the slot-9 fallback) since the image
-  displays regardless.
-- **Static scoreboard test image is still enabled**: `IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG`
-  is `1`, so the panel shows the fixed sample values from
-  `include/scoreboard_test_png.h`, not live game state. Set it to `0` to push the
-  real rendered scoreboard.
-- **On-device PNG compression is unavailable**: the ESP32 ROM miniz compressor
-  fails, so the renderer falls back to a valid but uncompressed PNG (~4.7 KB).
-  That still fits within a single 12 KB window, so it transfers fine.
+- The iPixel notify channel (`fa03`) has never produced a packet on the ESP32 connection, so image and slot ACKs are not waited on (`IPIXEL_REQUIRE_IMAGE_ACK 0`, `IPIXEL_REQUIRE_SLOT_ACK 0`). The panel still receives and displays pushed content.
+- On-device PNG compression uses a self-contained fixed-Huffman DEFLATE encoder in `src/scoreboard.cpp` (the ESP32-C3 ROM miniz needs a heap allocation we cannot satisfy). The panel's PNG decoder rejects an uncompressed/stored PNG.
 
 
 
@@ -90,8 +81,9 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 
 - 96x16 flexible LED matrix
 - Controlled over BLE
-- Stores up to 10 animations internally; content survives power cycles
-- Animations were uploaded during prototype work and remain on the device
+- Stores up to 10 images internally; GIF slots persist across power cycles
+- Slot 5 is overwritten each turn by the ESP32 with the live scoreboard PNG
+- Upload GIF assets with `setup/storeImages.py` when adding or replacing animations
 
 ### Phones
 
@@ -126,7 +118,7 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
               iPixel LED display
 ```
 
-### Target
+### Target (largely complete)
 
 ```text
   Phone (Home team)            Phone (Away team)
@@ -145,7 +137,8 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
                       |
                       v
               iPixel LED display
-         (result animations + scoreboard)
+         (result animations, scroll text,
+          live scoreboard on slot 5)
 ```
 
 ---
@@ -259,7 +252,19 @@ Response: `{"team":"home"}`, `{"team":"away"}`, or `{"team":"full"}`.
 }
 ```
 
-When both players lock, `result` contains the resolved outcome and `image` holds a category string (`homerun`, `double`, `single`, `foul`, `strike`, `flyout`, `waiting`) intended for iPixel slot selection. Scoreboard fields persist across at-bats until `/api/new-game` is called.
+When both players lock, `result` contains the resolved outcome and `image` holds a category string for the iPixel display. Common values:
+
+| `image` value | iPixel behavior |
+| ------------- | --------------- |
+| `homerun`, `triple`, `double`, `single` | Stored GIF slot |
+| `ball`, `strike` | Ball animation (slot 6) |
+| `foul` | Foul animation (slot 7) |
+| `flyout`, `out` | Flyout animation (slot 8) |
+| `walk` | Scrolling text `"WALK"` |
+| `strikeout` | Scrolling text `"STRIKEOUT"` |
+| `waiting` | No result yet |
+
+Scoreboard fields persist across at-bats until `/api/new-game` is called.
 
 ### Captive portal routes
 
@@ -269,9 +274,17 @@ These redirect or respond so phones detect the portal cleanly:
 
 ---
 
-## iPixel Reference (from Mac prototype)
+## iPixel Reference
 
-The firmware now uses the stored-slot command path for animations and a compact image-transfer path for the dynamic scoreboard. The Mac tooling remains the reference for slot uploads.
+The firmware uses stored GIF slots for hit/out animations, slot 5 for the live scoreboard, and pre-encoded scroll-text frames for walk and strikeout. Mac tooling uploads the GIF assets and generates the scroll-text payloads.
+
+### Display flow
+
+1. **Boot** — connect over BLE, show logo (slot 10)
+2. **Result** — play the matching GIF slot, or scroll text for walk/strikeout
+3. **Return** — after `IPIXEL_SCOREBOARD_RETURN_MS` (5 seconds), render game state, push PNG to slot 5, call `show_slot(5)`
+
+Pushing the scoreboard to a numbered slot (instead of `save_slot=0`) keeps stored animations working: the panel treats slot 5 like any other stored image.
 
 ### BLE characteristics
 
@@ -286,8 +299,9 @@ The firmware now uses the stored-slot command path for animations and a compact 
 
 - 244-byte chunks
 - 12 KB windows
-- ACK-based transfers
-- Live scoreboard uses `save_slot=0`; slot 9 remains the fallback static scoreboard
+- ACK-based transfers on the Mac client; ESP32 treats a fully-written window as success
+- Live scoreboard PNG is pushed to **slot 5** each update, then displayed with `show_slot(5)`
+- Walk and strikeout use `send_text` scroll frames (`save_slot=0`), pre-encoded in `include/ipixel_scroll_text.h`
 
 Image window framing (matches `pypixelcolor` `_build_send_plan` for PNG):
 
@@ -312,24 +326,25 @@ Image window framing (matches `pypixelcolor` `_build_send_plan` for PNG):
 
 Send to the write characteristic to play a stored animation.
 
-### Animation slot assignments
+### Slot and display assignments
 
 
-| Slot | Content    |
-| ---- | ---------- |
-| 1    | Homerun    |
-| 2    | Triple     |
-| 3    | Double     |
-| 4    | Single     |
-| 5    | Walk       |
-| 6    | Ball       |
-| 7    | Foul       |
-| 8    | Flyout     |
-| 9    | Scoreboard fallback |
-| 10   | Logo       |
+| Slot | Content |
+| ---- | ------- |
+| 1 | Homerun |
+| 2 | Triple |
+| 3 | Double |
+| 4 | Single |
+| 5 | **Live scoreboard** (pushed by firmware each turn) |
+| 6 | Ball |
+| 7 | Foul |
+| 8 | Flyout |
+| 9 | Ground out |
+| 10 | Logo |
 
+Walk and strikeout are **not** stored slots. The firmware sends scroll-text BLE frames for those outcomes.
 
-Slots persist across power cycles on the iPixel hardware.
+GIF slots persist across power cycles on the iPixel hardware. Slot 5 is overwritten every time the scoreboard updates.
 
 ### iPixel configuration
 
@@ -360,12 +375,29 @@ instead of NimBLE's UUID-derived handle. Current diagnostics show handle
 - `IPIXEL_IMAGE_RAW_WRITE_HANDLE` — raw ATT handle tried first for image upload
 frames. `0` uses the characteristic-derived handle first, then falls back to
 `IPIXEL_RAW_WRITE_HANDLE`.
-- `IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG` — diagnostic flag. When `1`, the
-firmware pushes a known-good Pillow-compressed PNG from
-`include/scoreboard_test_png.h` instead of the live render, isolating transport
-problems from runtime PNG generation. Set to `0` for live game state.
-- `IPIXEL_SCOREBOARD_RETURN_MS` — how long a result animation stays on the
-iPixel before the firmware pushes the live scoreboard image
+- `IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG` — diagnostic flag. When `1`, pushes a
+known-good Pillow-compressed PNG from `include/scoreboard_test_png.h` instead of
+the live render. Default is `0` (live game state).
+- `IPIXEL_SCOREBOARD_RETURN_MS` — how long a result animation or scroll text
+stays on the iPixel before the firmware pushes the live scoreboard to slot 5
+
+### Mac setup scripts
+
+Upload GIF animations to the iPixel (close the iPixel Color app and power off the ESP32 first — only one BLE connection is allowed):
+
+```bash
+python3 setup/storeImages.py
+```
+
+The script scans for a device named `LED_BLE_*`, uploads GIFs from `setup/`, and skips slot 5 (reserved for the live scoreboard).
+
+Regenerate scroll-text payloads after changing walk/strikeout wording:
+
+```bash
+python3 setup/generateScrollTextPayloads.py
+```
+
+This writes `include/ipixel_scroll_text.h` using the same `send_text` framing as `pypixelcolor`.
 
 **Before testing:** Close the iPixel Color phone app. BLE allows only one connection at a time.
 
@@ -492,8 +524,9 @@ through populated slots.
 `IPIXEL_RAW_WRITE_HANDLE 0x0006`.
 - Do not call blocking BLE reads/writes from the web-server request handler
 task; a diagnostic `readValue()` there caused a load-access-fault crash.
-- `triple` and `walk` slots are mapped in `showIPixelResult()` but not yet
-produced by `resolvePlay()`; they are reserved for Phase 5 rules.
+- `triple` is mapped in `showIPixelResult()` but not yet produced by
+`resolvePlay()`.
+- Walk and strikeout use scroll text, not stored GIF slots.
 
 Diagnostic test order:
 
@@ -548,29 +581,22 @@ runners plus the batter.
 - Three strikes or any out result records an out; three outs clear the bases and
 advance the half-inning.
 
-### Phase 4 — iPixel scoreboard return flow (in progress)
+### Phase 4 — iPixel scoreboard (complete)
 
 Show live game state on the LED matrix.
 
-- [x] Flow: result animation plays, then scoreboard returns
-- [x] Use stored scoreboard slot 9 as the fallback return screen
+- [x] Flow: result animation or scroll text plays, then scoreboard returns
 - [x] Configurable delay via `IPIXEL_SCOREBOARD_RETURN_MS`
 - [x] Render live score/count/base runner pixels into the iPixel scoreboard
-- [x] Push generated scoreboard PNG over BLE with `save_slot=0` (image displays)
-- [ ] Treat the missing notify ACK as success and skip the slot-9 fallback
-- [ ] Disable the static test PNG and verify live game state renders correctly
+- [x] Push generated scoreboard PNG to slot 5 and call `show_slot(5)`
+- [x] Treat the missing notify ACK as success (image displays without it)
+- [x] Compress the PNG on-device so the panel's decoder accepts it
+- [x] Scroll text for walk and strikeout instead of stored GIF slots
 
-**Status:** The image-push path now reaches the panel and the scoreboard image
-displays. The 13-byte window header fix was the breakthrough — earlier the
-length prefix was off by 2 bytes, truncating the payload and silently failing the
-CRC. Two things remain before the live scoreboard is correct:
-
-1. The device never returns a notify ACK on this link, so the firmware times out
-   and falls back to slot 9, overwriting the freshly pushed image. The fix is to
-   stop gating on the ACK since the image clearly displays without it.
-2. `IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG` is still `1`, so the panel shows fixed
-   sample values rather than live `GameState`. Set it to `0` to push the real
-   render.
+**Done:** After each play, the iPixel shows the result (GIF slot or scroll text),
+waits 5 seconds, then displays the live scoreboard from slot 5. Using a numbered
+slot for the scoreboard keeps stored hit/out animations working alongside live
+updates.
 
 The template contract is:
 
@@ -579,12 +605,13 @@ The template contract is:
 - The right-side grid renders visitor and home rows with inning 1-3 runs and a
   total in the far-right box.
 
-### Phase 5 — Full baseball rules
+### Phase 5 — Full baseball rules (in progress)
 
 Expand beyond single at-bat outcomes.
 
-- Walks and balls
-- Double plays, sacrifice flies, and similar situational rules
+- [x] Walks (four balls) and strikeouts (three strikes)
+- [ ] Double plays, sacrifice flies, and similar situational rules
+- [ ] Triple as a resolved hit outcome
 
 **Done when:** A full game can be played start to finish with correct scoring and inning flow.
 
@@ -598,8 +625,8 @@ Expand beyond single at-bat outcomes.
 4. Players scan, join Wi-Fi, and tap Join Game (Home then Away)
 5. The pitching and batting teams lock their choices for the half
 6. ESP32 resolves the play
-7. iPixel shows the result animation
-8. Scoreboard updates
+7. iPixel shows the result animation or scroll text (walk/strikeout)
+8. Scoreboard updates on slot 5
 9. Play continues through full innings
 
 No laptop, cloud service, or external server required.
@@ -610,15 +637,20 @@ No laptop, cloud service, or external server required.
 
 ```text
 pitch_battle/
-  assets/ipixel/      iPixel source artwork and fallback slot assets
-  include/config.h    Wi-Fi credentials, TFT pins, iPixel settings
-  include/ipixel.h    iPixel BLE API
-  include/scoreboard.h  Dynamic scoreboard render API
-  src/main.cpp        Wi-Fi, portal, web UI, game logic
-  src/ipixel.cpp      iPixel BLE client
-  src/scoreboard.cpp  96x16 scoreboard renderer and PNG encoder
-  setup/storeImages.py  Mac helper for uploading fallback slot assets
-  platformio.ini      Board and library dependencies
-  LICENSE             MIT
+  include/
+    config.h              Wi-Fi credentials, TFT pins, iPixel settings
+    ipixel.h                iPixel BLE API
+    ipixel_scroll_text.h    Pre-encoded walk/strikeout scroll frames
+    scoreboard.h            Dynamic scoreboard render API
+  setup/
+    storeImages.py          Upload GIF slot assets to the iPixel (Mac)
+    generateScrollTextPayloads.py  Regenerate scroll-text BLE payloads
+    *.gif                   GIF assets for slots 1-4, 6-10
+  src/
+    main.cpp                Wi-Fi, portal, web UI, game logic
+    ipixel.cpp              iPixel BLE client
+    scoreboard.cpp          96x16 scoreboard renderer and PNG encoder
+  platformio.ini            Board and library dependencies
+  LICENSE                   MIT
 ```
 

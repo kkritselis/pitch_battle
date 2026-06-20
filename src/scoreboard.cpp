@@ -1,5 +1,4 @@
 #include "scoreboard.h"
-#include "esp32c3/rom/miniz.h"
 
 struct Rgb {
   uint8_t r;
@@ -260,16 +259,179 @@ static bool writeChunk(
   return writeBE32(out, capacity, pos, crc);
 }
 
+// Self-contained fixed-Huffman DEFLATE (RFC 1951) wrapped in a zlib stream
+// (RFC 1950). The ESP32-C3 ROM miniz needs a heap allocation we cannot satisfy,
+// so we encode here. The panel's PNG decoder requires real compressed data; a
+// stored/uncompressed block is rejected.
+static constexpr int LZ_HASH_BITS = 13;
+static constexpr size_t LZ_HASH_SIZE = (size_t)1 << LZ_HASH_BITS;
+static constexpr size_t LZ_MAX_RAW = SCOREBOARD_HEIGHT * (1 + SCOREBOARD_WIDTH * 3);
+
+static uint16_t lzHead[LZ_HASH_SIZE];
+static uint16_t lzPrev[LZ_MAX_RAW];
+
+static const uint16_t LEN_BASE[29] = {
+  3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59,
+  67, 83, 99, 115, 131, 163, 195, 227, 258
+};
+static const uint8_t LEN_EXTRA[29] = {
+  0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3,
+  4, 4, 4, 4, 5, 5, 5, 5, 0
+};
+static const uint16_t DIST_BASE[30] = {
+  1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513,
+  769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577
+};
+static const uint8_t DIST_EXTRA[30] = {
+  0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8,
+  9, 9, 10, 10, 11, 11, 12, 12, 13, 13
+};
+
+struct BitWriter {
+  uint8_t *out;
+  size_t cap;
+  size_t pos;
+  uint32_t buf;
+  int cnt;
+  bool ok;
+
+  void putBits(uint32_t value, int n) {
+    if (n == 0) {
+      return;
+    }
+    buf |= (value & (((uint32_t)1 << n) - 1)) << cnt;
+    cnt += n;
+    while (cnt >= 8) {
+      if (pos >= cap) { ok = false; return; }
+      out[pos++] = buf & 0xFF;
+      buf >>= 8;
+      cnt -= 8;
+    }
+  }
+
+  // Huffman codes are packed most-significant-bit first.
+  void putHuff(uint32_t code, int n) {
+    for (int i = n - 1; i >= 0; i--) {
+      putBits((code >> i) & 1, 1);
+    }
+  }
+
+  void alignByte() {
+    if (cnt > 0) {
+      if (pos >= cap) { ok = false; return; }
+      out[pos++] = buf & 0xFF;
+      buf = 0;
+      cnt = 0;
+    }
+  }
+
+  void putByte(uint8_t b) {
+    if (pos >= cap) { ok = false; return; }
+    out[pos++] = b;
+  }
+};
+
+static void putFixedLiteral(BitWriter &bw, uint16_t sym) {
+  if (sym <= 143) {
+    bw.putHuff(0x30 + sym, 8);
+  } else if (sym <= 255) {
+    bw.putHuff(0x190 + (sym - 144), 9);
+  } else if (sym <= 279) {
+    bw.putHuff(sym - 256, 7);
+  } else {
+    bw.putHuff(0xC0 + (sym - 280), 8);
+  }
+}
+
+static void putFixedMatch(BitWriter &bw, int length, int distance) {
+  int li = 28;
+  while (li > 0 && LEN_BASE[li] > length) li--;
+  putFixedLiteral(bw, 257 + li);
+  bw.putBits(length - LEN_BASE[li], LEN_EXTRA[li]);
+
+  int di = 29;
+  while (di > 0 && DIST_BASE[di] > distance) di--;
+  bw.putHuff(di, 5);
+  bw.putBits(distance - DIST_BASE[di], DIST_EXTRA[di]);
+}
+
+static inline uint32_t lzHash(const uint8_t *d, size_t i) {
+  uint32_t v = ((uint32_t)d[i] << 16) | ((uint32_t)d[i + 1] << 8) | d[i + 2];
+  return (v * 2654435761u) >> (32 - LZ_HASH_BITS);
+}
+
 static size_t buildZlibCompressedBlock(
   uint8_t *out,
   size_t capacity,
   const uint8_t *data,
   size_t length
 ) {
-  const int flags =
-    TDEFL_WRITE_ZLIB_HEADER |
-    TDEFL_DEFAULT_MAX_PROBES;
-  return tdefl_compress_mem_to_mem(out, capacity, data, length, flags);
+  if (length > LZ_MAX_RAW || capacity < 6) {
+    return 0;
+  }
+
+  memset(lzHead, 0, sizeof(lzHead));
+
+  BitWriter bw{out, capacity, 0, 0, 0, true};
+  bw.putByte(0x78); // zlib CMF: deflate, 32K window
+  bw.putByte(0x01); // zlib FLG (check bits make header % 31 == 0)
+
+  bw.putBits(1, 1); // BFINAL = 1
+  bw.putBits(1, 2); // BTYPE = 01 (fixed Huffman)
+
+  size_t i = 0;
+  while (i < length && bw.ok) {
+    int bestLen = 0;
+    size_t bestPos = 0;
+
+    if (i + 3 <= length) {
+      const uint32_t h = lzHash(data, i);
+      uint16_t cand = lzHead[h];
+      int chain = 64;
+      const size_t maxLen = min((size_t)258, length - i);
+      while (cand != 0 && chain-- > 0) {
+        const size_t c = cand - 1;
+        if (i - c > 32768) break;
+        size_t l = 0;
+        while (l < maxLen && data[c + l] == data[i + l]) l++;
+        if ((int)l > bestLen) {
+          bestLen = (int)l;
+          bestPos = c;
+          if (l >= maxLen) break;
+        }
+        cand = lzPrev[c];
+      }
+      lzPrev[i] = lzHead[h];
+      lzHead[h] = (uint16_t)(i + 1);
+    }
+
+    if (bestLen >= 3) {
+      putFixedMatch(bw, bestLen, (int)(i - bestPos));
+      for (int k = 1; k < bestLen; k++) {
+        const size_t p = i + k;
+        if (p + 3 <= length) {
+          const uint32_t h = lzHash(data, p);
+          lzPrev[p] = lzHead[h];
+          lzHead[h] = (uint16_t)(p + 1);
+        }
+      }
+      i += bestLen;
+    } else {
+      putFixedLiteral(bw, data[i]);
+      i++;
+    }
+  }
+
+  putFixedLiteral(bw, 256); // end of block
+  bw.alignByte();
+
+  const uint32_t adler = adler32(data, length);
+  bw.putByte((adler >> 24) & 0xFF);
+  bw.putByte((adler >> 16) & 0xFF);
+  bw.putByte((adler >> 8) & 0xFF);
+  bw.putByte(adler & 0xFF);
+
+  return bw.ok ? bw.pos : 0;
 }
 
 static size_t buildZlibStoredBlock(
@@ -312,29 +474,6 @@ size_t renderScoreboardPng(
   }
 
   renderFramebuffer(state);
-
-  size_t minizPngLength = 0;
-  void *minizPng = tdefl_write_image_to_png_file_in_memory_ex(
-    pixelBuffer,
-    SCOREBOARD_WIDTH,
-    SCOREBOARD_HEIGHT,
-    3,
-    &minizPngLength,
-    6,
-    false
-  );
-  if (minizPng != nullptr && minizPngLength > 0 && minizPngLength <= outCapacity) {
-    memcpy(out, minizPng, minizPngLength);
-    mz_free(minizPng);
-    Serial.print("Scoreboard PNG: png=");
-    Serial.print(minizPngLength);
-    Serial.println(" mode=miniz-png");
-    return minizPngLength;
-  }
-  if (minizPng != nullptr) {
-    mz_free(minizPng);
-  }
-  Serial.println("Scoreboard PNG: miniz-png failed; using fallback encoder");
 
   size_t rawPos = 0;
   for (uint8_t y = 0; y < SCOREBOARD_HEIGHT; y++) {

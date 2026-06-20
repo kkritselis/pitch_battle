@@ -8,6 +8,7 @@
 #if IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG
 #include "scoreboard_test_png.h"
 #endif
+#include "ipixel_scroll_text.h"
 
 static const char *IPIXEL_WRITE_UUID = "0000fa02-0000-1000-8000-00805f9b34fb";
 static const char *IPIXEL_NOTIFY_UUID = "0000fa03-0000-1000-8000-00805f9b34fb";
@@ -41,6 +42,9 @@ static uint8_t ipixelBurstStep = 0;
 static uint32_t ipixelBurstNextMs = 0;
 static char ipixelBurstLabel[16] = "";
 static bool ipixelBurstReturnToScoreboard = false;
+static bool ipixelBurstIsText = false;
+static const uint8_t *ipixelBurstTextData = nullptr;
+static size_t ipixelBurstTextLength = 0;
 static bool ipixelScoreboardPending = false;
 static bool ipixelHaveScoreboardState = false;
 static ScoreboardState ipixelScoreboardState;
@@ -58,6 +62,12 @@ static void ipixelStartSlotBurst(
   const String &label,
   bool returnToScoreboard
 );
+static void ipixelStartTextBurst(
+  const String &label,
+  const uint8_t *data,
+  size_t length
+);
+static bool ipixelSendRawMessage(const uint8_t *message, size_t messageLength);
 bool ipixelIsConnected();
 
 static bool ipixelUseConfiguredMac() {
@@ -542,6 +552,59 @@ static bool ipixelSendSlotCommand(uint8_t slot) {
   return ipixelSendCommand(cmd, sizeof(cmd), IPIXEL_REQUIRE_SLOT_ACK);
 }
 
+static bool ipixelSendRawMessage(const uint8_t *message, size_t messageLength) {
+  if (!ipixelIsConnected() || ipixelWriteChar == nullptr || message == nullptr || messageLength == 0) {
+    return false;
+  }
+
+  if (messageLength > IPIXEL_IMAGE_MESSAGE_MAX_BYTES) {
+    Serial.println("iPixel raw message too large");
+    return false;
+  }
+
+  const uint16_t connId = ipixelClient->getConnId();
+  const uint16_t handle =
+    IPIXEL_RAW_WRITE_HANDLE != 0 ? IPIXEL_RAW_WRITE_HANDLE : ipixelWriteChar->getHandle();
+
+  Serial.print("iPixel raw message send bytes=");
+  Serial.print(messageLength);
+  Serial.print(" handle=0x");
+  Serial.println(handle, HEX);
+
+  ipixelAckReceived = false;
+  ipixelAckPending = true;
+
+  for (size_t pos = 0; pos < messageLength; pos += IPIXEL_IMAGE_CHUNK_BYTES) {
+    const size_t chunkLength =
+      min(IPIXEL_IMAGE_CHUNK_BYTES, messageLength - pos);
+    if (!ipixelWriteWithResponseDirect(
+      connId,
+      handle,
+      message + pos,
+      chunkLength
+    )) {
+      Serial.println("iPixel raw message chunk write failed");
+      ipixelAckPending = false;
+      return false;
+    }
+    delay(4);
+  }
+
+  if (!ipixelWaitForAck(IPIXEL_REQUIRE_IMAGE_ACK ? 8000 : 1500)) {
+    ipixelAckPending = false;
+#if IPIXEL_REQUIRE_IMAGE_ACK
+    Serial.println("iPixel raw message ack timeout");
+    return false;
+#else
+    Serial.println("iPixel raw message sent (no ACK; assuming displayed)");
+    return true;
+#endif
+  }
+
+  Serial.println("iPixel raw message ACK received");
+  return true;
+}
+
 static bool ipixelSendImageBytes(
   const uint8_t *fileBytes,
   size_t fileLength,
@@ -755,15 +818,19 @@ static bool ipixelPushScoreboardImage() {
   delay(300);
 
   bool startedSlotBurst = false;
-  bool sent = ipixelSendImageBytes(scoreboardBytes, scoreboardLength, 0);
-  if (!sent) {
-    Serial.println("iPixel live scoreboard saveSlot=0 failed; trying slot 9 update");
-    sent = ipixelSendImageBytes(scoreboardBytes, scoreboardLength, IPIXEL_SLOT_SCOREBOARD);
-    if (sent) {
-      Serial.println("iPixel scoreboard slot 9 updated; showing fallback slot");
-      ipixelStartSlotBurst(IPIXEL_SLOT_SCOREBOARD, "score-updated", false);
-      startedSlotBurst = true;
+  const uint8_t scoreboardSlot = IPIXEL_SLOT_SCOREBOARD;
+  bool sent = ipixelSendImageBytes(scoreboardBytes, scoreboardLength, scoreboardSlot);
+  if (sent) {
+    delay(300);
+    if (!ipixelSendSlotCommand(scoreboardSlot)) {
+      Serial.println("iPixel live scoreboard show_slot failed");
+      sent = false;
+    } else {
+      Serial.print("iPixel live scoreboard displayed on slot ");
+      Serial.println(scoreboardSlot);
     }
+  } else {
+    Serial.println("iPixel live scoreboard image push failed");
   }
 
   if (ipixelWifiActive && !startedSlotBurst) {
@@ -985,7 +1052,14 @@ void ipixelLoop() {
       sent = ipixelSendDeviceInfo();
       ipixelBurstStep++;
       ipixelBurstNextMs = millis() + 120;
-    } else if (ipixelBurstStep <= 3) {
+    } else if (ipixelBurstIsText && ipixelBurstStep == 1) {
+      Serial.print("iPixel burst step scroll text label=");
+      Serial.println(ipixelBurstLabel);
+      delay(300);
+      sent = ipixelSendRawMessage(ipixelBurstTextData, ipixelBurstTextLength);
+      ipixelBurstStep = 4;
+      ipixelBurstNextMs = millis() + 120;
+    } else if (!ipixelBurstIsText && ipixelBurstStep <= 3) {
       Serial.print("iPixel burst step slot attempt=");
       Serial.print(ipixelBurstStep);
       Serial.print(" slot=");
@@ -996,9 +1070,14 @@ void ipixelLoop() {
     } else {
       Serial.print("iPixel burst complete label=");
       Serial.print(ipixelBurstLabel);
-      Serial.print(" slot=");
-      Serial.println(ipixelBurstSlot);
-      if (ipixelBurstReturnToScoreboard && ipixelBurstSlot != IPIXEL_SLOT_SCOREBOARD) {
+      if (ipixelBurstIsText) {
+        Serial.println(" (scroll text)");
+      } else {
+        Serial.print(" slot=");
+        Serial.println(ipixelBurstSlot);
+      }
+      if (ipixelBurstReturnToScoreboard &&
+          (ipixelBurstIsText || ipixelBurstSlot != IPIXEL_SLOT_SCOREBOARD)) {
         ipixelScoreboardPending = true;
         ipixelScoreboardDueMs = millis() + IPIXEL_SCOREBOARD_RETURN_MS;
         Serial.print("iPixel scoreboard return scheduled in ms=");
@@ -1006,6 +1085,9 @@ void ipixelLoop() {
       }
       ipixelBurstActive = false;
       ipixelBurstReturnToScoreboard = false;
+      ipixelBurstIsText = false;
+      ipixelBurstTextData = nullptr;
+      ipixelBurstTextLength = 0;
       if (ipixelWifiActive) {
         esp_coex_preference_set(ESP_COEX_PREFER_BALANCE);
         Serial.println("iPixel coex restored balance");
@@ -1021,8 +1103,10 @@ void ipixelLoop() {
     ipixelScoreboardPending = false;
     Serial.println("iPixel returning to live scoreboard");
     if (!ipixelPushScoreboardImage()) {
-      Serial.println("iPixel live scoreboard failed; using slot fallback");
+      Serial.println("iPixel live scoreboard failed");
+#if IPIXEL_SLOT_SCOREBOARD
       ipixelStartSlotBurst(IPIXEL_SLOT_SCOREBOARD, "score-fallback", false);
+#endif
     }
   }
 
@@ -1074,11 +1158,42 @@ static uint8_t ipixelSlotForImage(const String &imageName) {
   if (imageName == "triple") return IPIXEL_SLOT_TRIPLE;
   if (imageName == "double") return IPIXEL_SLOT_DOUBLE;
   if (imageName == "single") return IPIXEL_SLOT_SINGLE;
-  if (imageName == "walk") return IPIXEL_SLOT_WALK;
-  if (imageName == "strike") return IPIXEL_SLOT_BALL;
+  if (imageName == "ball" || imageName == "strike") return IPIXEL_SLOT_BALL;
   if (imageName == "foul") return IPIXEL_SLOT_FOUL;
   if (imageName == "flyout" || imageName == "out") return IPIXEL_SLOT_FLYOUT;
   return IPIXEL_SLOT_LOGO;
+}
+
+static void ipixelStartTextBurst(
+  const String &label,
+  const uint8_t *data,
+  size_t length
+) {
+  if (!ipixelIsConnected() || data == nullptr || length == 0) {
+    Serial.println("iPixel text burst skipped (not connected or empty payload)");
+    return;
+  }
+
+  ipixelBurstIsText = true;
+  ipixelBurstTextData = data;
+  ipixelBurstTextLength = length;
+  ipixelBurstSlot = 0;
+  ipixelBurstStep = 0;
+  ipixelBurstNextMs = millis();
+  ipixelBurstActive = true;
+  ipixelBurstReturnToScoreboard = true;
+  ipixelScoreboardPending = false;
+  label.toCharArray(ipixelBurstLabel, sizeof(ipixelBurstLabel));
+
+  Serial.print("iPixel text burst queued label=");
+  Serial.print(ipixelBurstLabel);
+  Serial.print(" bytes=");
+  Serial.println(length);
+
+  if (ipixelWifiActive) {
+    esp_coex_preference_set(ESP_COEX_PREFER_BT);
+    Serial.println("iPixel coex prefer BT for text burst");
+  }
 }
 
 static void ipixelStartSlotBurst(
@@ -1095,6 +1210,9 @@ static void ipixelStartSlotBurst(
   ipixelBurstStep = 0;
   ipixelBurstNextMs = millis();
   ipixelBurstActive = true;
+  ipixelBurstIsText = false;
+  ipixelBurstTextData = nullptr;
+  ipixelBurstTextLength = 0;
   ipixelBurstReturnToScoreboard = returnToScoreboard;
   ipixelScoreboardPending = false;
   label.toCharArray(ipixelBurstLabel, sizeof(ipixelBurstLabel));
@@ -1146,14 +1264,31 @@ void showIPixelResult(const String &imageName, const ScoreboardState &state) {
     return;
   }
 
+  ipixelScoreboardState = state;
+  ipixelHaveScoreboardState = true;
+
+  if (imageName == "walk") {
+    Serial.println("iPixel result 'walk' -> scroll text");
+    ipixelStartTextBurst("walk", IPIXEL_SCROLL_WALK, IPIXEL_SCROLL_WALK_BYTES);
+    return;
+  }
+
+  if (imageName == "strikeout") {
+    Serial.println("iPixel result 'strikeout' -> scroll text");
+    ipixelStartTextBurst(
+      "strikeout",
+      IPIXEL_SCROLL_STRIKEOUT,
+      IPIXEL_SCROLL_STRIKEOUT_BYTES
+    );
+    return;
+  }
+
   const uint8_t slot = ipixelSlotForImage(imageName);
   Serial.print("iPixel result '");
   Serial.print(imageName);
   Serial.print("' -> slot ");
   Serial.println(slot);
 
-  ipixelScoreboardState = state;
-  ipixelHaveScoreboardState = true;
   ipixelStartSlotBurst(slot, imageName, true);
 }
 

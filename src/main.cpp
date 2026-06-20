@@ -62,6 +62,7 @@ enum OutcomeType {
   OUTCOME_DOUBLE,
   OUTCOME_SINGLE,
   OUTCOME_FOUL,
+  OUTCOME_BALL,
   OUTCOME_STRIKE,
   OUTCOME_OUT
 };
@@ -569,6 +570,14 @@ void applyPlayResult(const PlayResult &result) {
         gameState.strikes++;
       }
       break;
+    case OUTCOME_BALL:
+      gameState.balls++;
+      if (gameState.balls >= 4) {
+        gameState.balls = 0;
+        gameState.strikes = 0;
+        advanceRunners(1);
+      }
+      break;
     case OUTCOME_STRIKE:
       gameState.strikes++;
       if (gameState.strikes >= 3) {
@@ -634,9 +643,21 @@ void handleSwing() {
 void checkResolve() {
   if (pitchLocked && swingLocked) {
     PlayResult result = resolvePlay(pitchValue, swingValue);
+    const uint8_t ballsBefore = gameState.balls;
+    const uint8_t strikesBefore = gameState.strikes;
+
+    applyPlayResult(result);
     resultText = result.text;
     currentImage = result.image;
-    applyPlayResult(result);
+
+    if (result.outcome == OUTCOME_BALL && ballsBefore == 3) {
+      currentImage = "walk";
+      resultText = "Walk. Batter takes first base.";
+    } else if (result.outcome == OUTCOME_STRIKE && strikesBefore == 2) {
+      currentImage = "strikeout";
+      resultText = "Strikeout!";
+    }
+
     pendingIPixelImage = currentImage;
     pendingIPixelResult = true;
 
@@ -713,6 +734,10 @@ PlayResult resolvePlay(String pitch, String swing) {
 
   if (score == 1) {
     return {"Bad swing. Routine ground out.", "flyout", OUTCOME_OUT};
+  }
+
+  if (heightDiff >= 2) {
+    return {"Ball.", "ball", OUTCOME_BALL};
   }
 
   return {"Strike! Complete miss.", "strike", OUTCOME_STRIKE};
