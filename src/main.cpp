@@ -414,17 +414,38 @@ setInterval(refreshState, 1000);
 )HTML";
 }
 
-void drawCenteredText(const char *text, int y, uint16_t color, int size) {
 #if ENABLE_LCD
+static int lcdLayoutScale(int value) {
+  return (value * LCD_LAYOUT_SCALE_PCT) / 100;
+}
+
+static int lcdLayoutOrigin() {
+  const int scaled = lcdLayoutScale(SCREEN_H);
+  return (SCREEN_H - scaled) / 2;
+}
+
+static int lcdLayoutY(int designY) {
+  return lcdLayoutOrigin() + lcdLayoutScale(designY);
+}
+
+void drawCenteredText(const char *text, int designY, uint16_t color, int size) {
   gfx->setTextColor(color);
   gfx->setTextSize(size);
   int16_t x1, y1;
   uint16_t w, h;
+  const int y = lcdLayoutY(designY);
   gfx->getTextBounds(text, 0, y, &x1, &y1, &w, &h);
   gfx->setCursor((SCREEN_W - w) / 2, y);
   gfx->print(text);
-#endif
 }
+#else
+void drawCenteredText(const char *text, int designY, uint16_t color, int size) {
+  (void)text;
+  (void)designY;
+  (void)color;
+  (void)size;
+}
+#endif
 
 void drawQrCode(const char *url) {
 #if ENABLE_LCD
@@ -439,12 +460,13 @@ void drawQrCode(const char *url) {
   qrcode_initText(&qrcode, qrcodeData, 3, 0, url);
 
   int qrSize = qrcode.size;
-  int scale = 5;
+  const int scale = lcdLayoutScale(5);
+  const int border = lcdLayoutScale(6);
   int qrPixels = qrSize * scale;
   int startX = (SCREEN_W - qrPixels) / 2;
-  int startY = 78;
+  int startY = lcdLayoutY(78);
 
-  gfx->fillRect(startX - 6, startY - 6, qrPixels + 12, qrPixels + 12, WHITE);
+  gfx->fillRect(startX - border, startY - border, qrPixels + border * 2, qrPixels + border * 2, WHITE);
 
   for (uint8_t y = 0; y < qrSize; y++) {
     for (uint8_t x = 0; x < qrSize; x++) {

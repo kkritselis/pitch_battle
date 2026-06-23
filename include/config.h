@@ -22,6 +22,9 @@
 #define SCREEN_W 240
 #define SCREEN_H 240
 
+// Round LCD bezel clips the edges; shrink and center on-screen content.
+#define LCD_LAYOUT_SCALE_PCT 85
+
 // Set to 0 to run without iPixel BLE (web server and LCD only).
 #define ENABLE_IPIXEL 1
 
