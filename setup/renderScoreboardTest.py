@@ -66,26 +66,26 @@ def draw_score_row(
     color: tuple[int, int, int],
 ) -> None:
     for x, value in zip((66, 72, 78), inning_runs):
-        fill_rect(img, x, y, 5, 6, BLACK)
+        fill_rect(img, x, y, 5, 5, BLACK)
         draw_digit(img, x + 1, y, value, color)
 
-    fill_rect(img, 86, y, 8, 6, BLACK)
+    fill_rect(img, 86, y, 8, 5, BLACK)
     draw_total(img, 87, y, total, color)
 
 
 def render_test_scoreboard() -> Image.Image:
     img = Image.open(TEMPLATE_PATH).convert("RGB")
 
-    draw_digit(img, 0, 0, 0, CYAN)     # balls
-    draw_digit(img, 0, 5, 1, YELLOW)   # strikes
-    draw_digit(img, 0, 10, 0, CYAN)    # outs
+    draw_digit(img, 0, 0, 0, YELLOW)   # balls
+    draw_digit(img, 0, 5, 1, CYAN)     # strikes
+    draw_digit(img, 0, 10, 0, YELLOW)  # outs
 
     fill_rect(img, 37, 1, 2, 2, WHITE) # second
     fill_rect(img, 43, 7, 2, 2, RED)   # first
     fill_rect(img, 31, 7, 2, 2, WHITE) # third
 
-    draw_score_row(img, 1, [0, 0, 0], 0, CYAN)
-    draw_score_row(img, 9, [1, 0, 0], 1, YELLOW)
+    draw_score_row(img, 2, [0, 0, 0], 0, CYAN)
+    draw_score_row(img, 10, [1, 0, 0], 1, YELLOW)
     return img
 
 

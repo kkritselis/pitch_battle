@@ -1,0 +1,1350 @@
+[
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "home_run",
+	"responses": [
+		{
+			"weight": 25, 
+			"text": "That was a high fast pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!", 
+			"action": "homerun"
+		},
+		{
+			"weight": 25, 
+			"text": "That was a high fast pitch and the batter got every bit of that one. Home run!",
+			"action": "homerun"
+		},
+		{
+			"weight": 25, 
+			"text": "That was a high fast pitch. No doubt about it. That one is headed for the bleachers! Home Run!",
+			"action": "homerun"
+		},
+		{
+			"weight": 25, 
+			"text": "That was a high fast pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home Run!", 
+			"action": "homerun"
+		}
+	]
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "result": {
+        "direction": "right",
+        "trajectory": "fly",
+        "power": "outfield",
+	"responses": [
+  		{
+    			"weight": 20,
+    			"text": "He pulled it foul down the line.",
+    			"action": "foul"
+  		},
+  		{
+    			"weight": 20,
+    			"text": "A deep pop up to right. The fielder makes the catch.",
+    			"action": "fly_out"
+  		},
+  		{
+    			"weight": 20,
+    			"text": "Grounded to the right side. Easy play at first.",
+    			"action": "out"
+  		},
+  		{
+    			"weight": 25,
+    			"text": "Line drive into right field for a base hit.",
+    			"action": "single"
+ 		},
+ 	 	{
+    			"weight": 10,
+    			"text": "That one gets past the outfielder. He is headed for second.",
+    			"action": "double"
+  		},
+  		{
+    			"weight": 5,
+    			"text": "Deep into the right corner. He is flying around the bases.",
+    			"action": "triple"
+  		}
+	]
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a high fast pitch. The batter swung high and slow. He matched the height perfectly. Way behind the pitch.",
+      "result": {
+        "direction": "right",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a high fast pitch. The batter swung center and fast. He swung over the top of it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a high fast pitch. The batter swung center and medium. He swung over the top of it. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a high fast pitch. The batter swung center and slow. He swung over the top of it. Way behind the pitch.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a high fast pitch. The batter swung low and fast. He completely missed the plane of the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a high fast pitch. The batter swung low and medium. He completely missed the plane of the pitch. A little late.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a high fast pitch. The batter swung low and slow. He completely missed the plane of the pitch. Way behind the pitch.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a high medium pitch. The batter swung high and fast. He matched the height perfectly. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a high medium pitch. The batter swung high and medium. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "home_run"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a high medium pitch. The batter swung high and slow. He matched the height perfectly. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a high medium pitch. The batter swung center and fast. He swung over the top of it. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a high medium pitch. The batter swung center and medium. He swung over the top of it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a high medium pitch. The batter swung center and slow. He swung over the top of it. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a high medium pitch. The batter swung low and fast. He completely missed the plane of the pitch. A little early.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a high medium pitch. The batter swung low and medium. He completely missed the plane of the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a high medium pitch. The batter swung low and slow. He completely missed the plane of the pitch. A little late.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a high slow pitch. The batter swung high and fast. He matched the height perfectly. Way out in front.",
+      "result": {
+        "direction": "left",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a high slow pitch. The batter swung high and medium. He matched the height perfectly. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a high slow pitch. The batter swung high and slow. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "home_run"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a high slow pitch. The batter swung center and fast. He swung over the top of it. Way out in front.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a high slow pitch. The batter swung center and medium. He swung over the top of it. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a high slow pitch. The batter swung center and slow. He swung over the top of it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a high slow pitch. The batter swung low and fast. He completely missed the plane of the pitch. Way out in front.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a high slow pitch. The batter swung low and medium. He completely missed the plane of the pitch. A little early.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a high slow pitch. The batter swung low and slow. He completely missed the plane of the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a center fast pitch. The batter swung high and fast. He got underneath the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a center fast pitch. The batter swung high and medium. He got underneath the pitch. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a center fast pitch. The batter swung high and slow. He got underneath the pitch. Way behind the pitch.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a center fast pitch. The batter swung center and fast. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "home_run"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a center fast pitch. The batter swung center and medium. He matched the height perfectly. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a center fast pitch. The batter swung center and slow. He matched the height perfectly. Way behind the pitch.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a center fast pitch. The batter swung low and fast. He swung over the top of it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a center fast pitch. The batter swung low and medium. He swung over the top of it. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a center fast pitch. The batter swung low and slow. He swung over the top of it. Way behind the pitch.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a center medium pitch. The batter swung high and fast. He got underneath the pitch. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a center medium pitch. The batter swung high and medium. He got underneath the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a center medium pitch. The batter swung high and slow. He got underneath the pitch. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a center medium pitch. The batter swung center and fast. He matched the height perfectly. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a center medium pitch. The batter swung center and medium. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "home_run"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a center medium pitch. The batter swung center and slow. He matched the height perfectly. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a center medium pitch. The batter swung low and fast. He swung over the top of it. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a center medium pitch. The batter swung low and medium. He swung over the top of it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a center medium pitch. The batter swung low and slow. He swung over the top of it. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a center slow pitch. The batter swung high and fast. He got underneath the pitch. Way out in front.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a center slow pitch. The batter swung high and medium. He got underneath the pitch. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a center slow pitch. The batter swung high and slow. He got underneath the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a center slow pitch. The batter swung center and fast. He matched the height perfectly. Way out in front.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a center slow pitch. The batter swung center and medium. He matched the height perfectly. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a center slow pitch. The batter swung center and slow. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "home_run"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a center slow pitch. The batter swung low and fast. He swung over the top of it. Way out in front.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a center slow pitch. The batter swung low and medium. He swung over the top of it. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a center slow pitch. The batter swung low and slow. He swung over the top of it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "fly",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a low fast pitch. The batter swung high and fast. He swung far underneath it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a low fast pitch. The batter swung high and medium. He swung far underneath it. A little late.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a low fast pitch. The batter swung high and slow. He swung far underneath it. Way behind the pitch.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a low fast pitch. The batter swung center and fast. He got underneath the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a low fast pitch. The batter swung center and medium. He got underneath the pitch. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a low fast pitch. The batter swung center and slow. He got underneath the pitch. Way behind the pitch.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a low fast pitch. The batter swung low and fast. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "home_run"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a low fast pitch. The batter swung low and medium. He matched the height perfectly. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a low fast pitch. The batter swung low and slow. He matched the height perfectly. Way behind the pitch.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a low medium pitch. The batter swung high and fast. He swung far underneath it. A little early.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a low medium pitch. The batter swung high and medium. He swung far underneath it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a low medium pitch. The batter swung high and slow. He swung far underneath it. A little late.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a low medium pitch. The batter swung center and fast. He got underneath the pitch. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a low medium pitch. The batter swung center and medium. He got underneath the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a low medium pitch. The batter swung center and slow. He got underneath the pitch. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a low medium pitch. The batter swung low and fast. He matched the height perfectly. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a low medium pitch. The batter swung low and medium. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "home_run"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a low medium pitch. The batter swung low and slow. He matched the height perfectly. A little late.",
+      "result": {
+        "direction": "right",
+        "trajectory": "ground",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "fast"
+      },
+      "commentary": "That was a low slow pitch. The batter swung high and fast. He swung far underneath it. Way out in front.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "medium"
+      },
+      "commentary": "That was a low slow pitch. The batter swung high and medium. He swung far underneath it. A little early.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "high",
+        "speed": "slow"
+      },
+      "commentary": "That was a low slow pitch. The batter swung high and slow. He swung far underneath it. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "fast"
+      },
+      "commentary": "That was a low slow pitch. The batter swung center and fast. He got underneath the pitch. Way out in front.",
+      "result": {
+        "direction": "none",
+        "trajectory": "none",
+        "power": "miss"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "medium"
+      },
+      "commentary": "That was a low slow pitch. The batter swung center and medium. He got underneath the pitch. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "center",
+        "speed": "slow"
+      },
+      "commentary": "That was a low slow pitch. The batter swung center and slow. He got underneath the pitch. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "fast"
+      },
+      "commentary": "That was a low slow pitch. The batter swung low and fast. He matched the height perfectly. Way out in front.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "infield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "medium"
+      },
+      "commentary": "That was a low slow pitch. The batter swung low and medium. He matched the height perfectly. A little early.",
+      "result": {
+        "direction": "left",
+        "trajectory": "ground",
+        "power": "outfield"
+      }
+    },
+    {
+      "pitch": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "swing": {
+        "height": "low",
+        "speed": "slow"
+      },
+      "commentary": "That was a low slow pitch. The batter swung low and slow. He matched the height perfectly. Perfect timing.",
+      "result": {
+        "direction": "center",
+        "trajectory": "ground",
+        "power": "home_run"
+      }
+    }
+  ]

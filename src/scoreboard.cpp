@@ -24,14 +24,14 @@ static const char *const SCOREBOARD_TEMPLATE[SCOREBOARD_HEIGHT] = {
   "......YY.YYY.YY..Y.Y.Y.YYY..YY....G......G....WW..c..c...c.c..c..w.....w.....w.....W#W........W#",
   ".....Y....Y..Y.Y.Y.Y.Y.Y...Y.....G........G...WW..c..c.cc..c..c..w.....w.....w.....W#W........W#",
   "......Y...Y..YY..Y.YY..YY...Y..W#..........##.Wwwwwwwwwwwwwwwwwwwpwwwwwpwwwwwpwwwwww#wwwwwwwwww#",
-  ".......Y..Y..Y.Y.Y.Y.Y.Y.....Y.W#....##....##.WW.................w.....w.....w.....W#W........W#",
-  ".....YY...Y..Y.Y.Y.Y.Y.YYY.YY....G........G...WW.Y.Y..Y..Y.Y.YYY.w.....w.....w.....W#W........W#",
-  "......C..C.C.CCC..CC..............G......G....WW.Y.Y.Y.Y.YYY.Y...w.....w.....w.....W#W........W#",
-  ".....C.C.C.C..C..C.................G....G.....WW.YYY.Y.Y.YYY.YY..w.....w.....w.....W#W........W#",
-  ".....C.C.C.C..C...C.................G..G......WW.Y.Y.Y.Y.Y.Y.Y...w.....w.....w.....W#W........W#",
-  ".....C.C.C.C..C....C.................##.......WW.Y.Y..Y..Y.Y.YYY.w.....w.....w.....W#W........W#",
-  "......C...C...C..CC..................##.......WWWwWwWWWWWwWwWW#WWwWWWWWwWWWWWwWWWWWW#WWWWWWWWWW#",
-  "..............................................W#################################################"
+  ".......Y..Y..Y.Y.Y.Y.Y.Y.....Y.W#....##....##.Wwwwwwwwwwwwwwwwwwwpwwwwwpwwwwwpwwwwww#wwwwwwwwww#",
+  ".....YY...Y..Y.Y.Y.Y.Y.YYY.YY....G........G...WW.................w.....w.....w.....W#W........W#",
+  "......C..C.C.CCC..CC..............G......G....WW.Y.Y..Y..Y.Y.YYY.w.....w.....w.....W#W........W#",
+  ".....C.C.C.C..C..C.................G....G.....WW.Y.Y.Y.Y.YYY.Y...w.....w.....w.....W#W........W#",
+  ".....C.C.C.C..C...C.................G..G......WW.YYY.Y.Y.YYY.YY..w.....w.....w.....W#W........W#",
+  ".....C.C.C.C..C....C.................##.......WW.Y.Y.Y.Y.Y.Y.Y...w.....w.....w.....W#W........W#",
+  "......C...C...C..CC..................##.......WW.Y.Y..Y..Y.Y.YYY.w.....w.....w.....W#W........W#",
+  "..............................................WWWWWWWWWWWWWWWWWWWwWWWWWwWWWWWwWWWWWW#WWWWWWWWWW#"
 };
 
 static const uint8_t GLYPH_SPACE[5] = {
@@ -152,10 +152,10 @@ static void drawScoreRow(
   uint8_t total,
   Rgb color
 ) {
-  fillRect(66, y, 5, 6, COLOR_BLACK);
-  fillRect(72, y, 5, 6, COLOR_BLACK);
-  fillRect(78, y, 5, 6, COLOR_BLACK);
-  fillRect(86, y, 8, 6, COLOR_BLACK);
+  fillRect(66, y, 5, 5, COLOR_BLACK);
+  fillRect(72, y, 5, 5, COLOR_BLACK);
+  fillRect(78, y, 5, 5, COLOR_BLACK);
+  fillRect(86, y, 8, 5, COLOR_BLACK);
 
   drawSingleDigit(67, y, inningRuns[0], color);
   drawSingleDigit(73, y, inningRuns[1], color);
@@ -166,16 +166,17 @@ static void drawScoreRow(
 static void renderFramebuffer(const ScoreboardState &state) {
   drawTemplate();
 
-  drawSingleDigit(0, 0, state.balls, COLOR_CYAN);
-  drawSingleDigit(0, 5, state.strikes, COLOR_YELLOW);
-  drawSingleDigit(0, 10, state.outs, COLOR_CYAN);
+  // Count colors contrast with their labels (cyan labels -> yellow digits, etc.).
+  drawSingleDigit(0, 0, state.balls, COLOR_YELLOW);
+  drawSingleDigit(0, 5, state.strikes, COLOR_CYAN);
+  drawSingleDigit(0, 10, state.outs, COLOR_YELLOW);
 
   drawBaseBox(37, 1, state.runnerSecond);
   drawBaseBox(43, 7, state.runnerFirst);
   drawBaseBox(31, 7, state.runnerThird);
 
-  drawScoreRow(1, state.awayInningRuns, state.awayScore, COLOR_CYAN);
-  drawScoreRow(9, state.homeInningRuns, state.homeScore, COLOR_YELLOW);
+  drawScoreRow(2, state.awayInningRuns, state.awayScore, COLOR_CYAN);
+  drawScoreRow(10, state.homeInningRuns, state.homeScore, COLOR_YELLOW);
 }
 
 static uint32_t crc32Update(uint32_t crc, const uint8_t *data, size_t length) {

@@ -1,0 +1,169 @@
+<html>
+<head>
+    <title>Pitch Battle</title>
+    <style>
+        body {
+            background-color: #101827;
+            color: white;
+            font-family: system-ui, sans-serif;
+        }
+
+        #app {
+            max-width: 953px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid red;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        #header {
+            width: 100%;
+            height: 137px;
+            background-image: url('phone_header.jpg');
+            background-size: cover;
+        }
+
+        #count {
+            width: 100%;
+            height: 275px;
+            display: flex;
+            flex-direction: column;
+            background-image: url('phone_count.jpg');
+        }
+
+        #row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #row div {
+            width: 20%;
+        }
+
+        #count-away, #count-home {
+            font-size: 90px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 100%;
+            margin-top: 48px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #count-inning {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 175%;
+            margin-top: 32px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #count-balls, #count-strikes, #count-outs, #count-count {
+            font-size: 50px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 100%;
+            margin-top: 60px;
+        }
+
+        #field {
+            width: 100%;
+            height: 275px;
+            background-image: url('phone_field.jpg');
+            display: flex;
+            justify-content: center;
+            gap: 135px;
+        }
+
+        #field span {
+            width: 45px ;
+            height: 60px;
+            background-color: lightblue;
+            clip-path: polygon(50% 12%, 100% 50%, 50% 90%, 0% 50%);
+            clip-path: polygon(38% 13%, 48% 23%, 39% 37%, 37% 56%, 38% 100%, 50% 70%, 61% 100%, 67% 57%, 67% 30%, 62% 20%, 58% 2%, 44% 2%);
+        }
+
+        #field-second {
+            margin-top: 0px;
+        }
+
+        #field-third, #field-first {
+            margin-top: 75px;
+        }
+
+        #pvp {
+            width: 100%;
+            height: 129px;
+            background-image: url('phone_pvp.jpg');
+        }
+
+        #choice {
+            width: 100%;
+            height: 454px;
+            background-image: url('phone_choice.jpg');
+        }
+
+        #button {
+            width: 100%;
+            height: 151px;
+            background-image: url('phone_button.jpg');
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="header">
+        </div>
+        <div id="count">
+            <div id="row">
+                <div id="count-away">
+                    0
+                </div>
+                <div id="count-inning">
+                    <span id="count-inning-text">Top of the</span><br>
+                    <span id="count-inning-number" style="font-size: 48px;">First</span>
+                </div>
+                <div id="count-home">
+                    0
+                </div>
+            </div>
+            <div id="row">
+                <div id="count-balls">
+                    0
+                </div>
+                <div id="count-strikes">
+                    0
+                </div>
+                <div id="count-outs">
+                    0
+                </div>
+                <div id="count-count">
+                    0 - 0
+                </div>
+            </div>
+        </div>
+        <div id="field">
+            <span id="field-third"></span>
+            <span id="field-second"></span>
+            <span id="field-first"></span>
+        </div>
+        <div id="pvp">
+        </div>
+        <div id="choice">
+        </div>
+        <div id="button">
+        </div>
+    </div>
+</body>
+</html>

@@ -1158,9 +1158,11 @@ static uint8_t ipixelSlotForImage(const String &imageName) {
   if (imageName == "triple") return IPIXEL_SLOT_TRIPLE;
   if (imageName == "double") return IPIXEL_SLOT_DOUBLE;
   if (imageName == "single") return IPIXEL_SLOT_SINGLE;
-  if (imageName == "ball" || imageName == "strike") return IPIXEL_SLOT_BALL;
+  if (imageName == "ball") return IPIXEL_SLOT_BALL;
+  if (imageName == "strike") return IPIXEL_SLOT_BALL;
   if (imageName == "foul") return IPIXEL_SLOT_FOUL;
   if (imageName == "flyout" || imageName == "out") return IPIXEL_SLOT_FLYOUT;
+  if (imageName == "groundout") return IPIXEL_SLOT_GROUNDOUT;
   return IPIXEL_SLOT_LOGO;
 }
 

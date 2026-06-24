@@ -2,9 +2,10 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <DNSServer.h>
-#include <qrcode.h>
 #include "config.h"
 #include "ipixel.h"
+#include "lcd_screen.h"
+#include "pitch_outcomes.h"
 
 #if ENABLE_LCD
   #include <Arduino_GFX_Library.h>
@@ -55,23 +56,7 @@ const uint8_t DIAGNOSTIC_SLOTS[] = {
   IPIXEL_SLOT_LOGO
 };
 
-// Outcome of a resolved play: the text shown on the phones and the image token
-// used to pick an iPixel animation slot (see showIPixelResult).
-enum OutcomeType {
-  OUTCOME_HOMERUN,
-  OUTCOME_DOUBLE,
-  OUTCOME_SINGLE,
-  OUTCOME_FOUL,
-  OUTCOME_BALL,
-  OUTCOME_STRIKE,
-  OUTCOME_OUT
-};
-
-struct PlayResult {
-  String text;
-  String image;
-  OutcomeType outcome;
-};
+// Outcome lookup lives in pitch_outcomes.h / pitch_outcomes.cpp.
 
 struct GameState {
   uint8_t inning = 1;
@@ -447,38 +432,6 @@ void drawCenteredText(const char *text, int designY, uint16_t color, int size) {
 }
 #endif
 
-void drawQrCode(const char *url) {
-#if ENABLE_LCD
-  gfx->fillScreen(BLACK);
-
-  drawCenteredText("PITCH BATTLE", 14, WHITE, 2);
-  drawCenteredText("Connect Wi-Fi:", 42, CYAN, 1);
-  drawCenteredText(AP_SSID, 56, YELLOW, 1);
-
-  QRCode qrcode;
-  uint8_t qrcodeData[qrcode_getBufferSize(3)];
-  qrcode_initText(&qrcode, qrcodeData, 3, 0, url);
-
-  int qrSize = qrcode.size;
-  const int scale = lcdLayoutScale(5);
-  const int border = lcdLayoutScale(6);
-  int qrPixels = qrSize * scale;
-  int startX = (SCREEN_W - qrPixels) / 2;
-  int startY = lcdLayoutY(78);
-
-  gfx->fillRect(startX - border, startY - border, qrPixels + border * 2, qrPixels + border * 2, WHITE);
-
-  for (uint8_t y = 0; y < qrSize; y++) {
-    for (uint8_t x = 0; x < qrSize; x++) {
-      uint16_t color = qrcode_getModule(&qrcode, x, y) ? BLACK : WHITE;
-      gfx->fillRect(startX + x * scale, startY + y * scale, scale, scale, color);
-    }
-  }
-
-  drawCenteredText("192.168.4.1", 204, GREEN, 1);
-#endif
-}
-
 void handleRoot() {
   server.send(200, "text/html", pageHtml());
 }
@@ -583,6 +536,9 @@ void applyPlayResult(const PlayResult &result) {
       break;
     case OUTCOME_DOUBLE:
       advanceRunners(2);
+      break;
+    case OUTCOME_TRIPLE:
+      advanceRunners(3);
       break;
     case OUTCOME_SINGLE:
       advanceRunners(1);
@@ -709,60 +665,22 @@ String getStateJson() {
 }
 
 PlayResult resolvePlay(String pitch, String swing) {
-  bool pitchHigh = pitch.indexOf("high") >= 0;
-  bool pitchMiddle = pitch.indexOf("middle") >= 0;
-  bool pitchLow = pitch.indexOf("low") >= 0;
+  const int pitchSpace = pitch.indexOf(' ');
+  const int swingSpace = swing.indexOf(' ');
+  PlayResult result;
 
-  bool pitchFast = pitch.indexOf("fast") >= 0;
-  bool pitchMedium = pitch.indexOf("medium") >= 0;
-  bool pitchSlow = pitch.indexOf("slow") >= 0;
-
-  bool swingHigh = swing.indexOf("high") >= 0;
-  bool swingMiddle = swing.indexOf("middle") >= 0;
-  bool swingLow = swing.indexOf("low") >= 0;
-
-  bool swingFast = swing.indexOf("fast") >= 0;
-  bool swingMedium = swing.indexOf("medium") >= 0;
-  bool swingSlow = swing.indexOf("slow") >= 0;
-
-  int heightDiff = 0;
-  if (pitchHigh && !swingHigh) heightDiff = swingMiddle ? 1 : 2;
-  if (pitchMiddle && !swingMiddle) heightDiff = (swingHigh || swingLow) ? 1 : 0;
-  if (pitchLow && !swingLow) heightDiff = swingMiddle ? 1 : 2;
-
-  int speedDiff = 0;
-  if (pitchFast && !swingFast) speedDiff = swingMedium ? 1 : 2;
-  if (pitchMedium && !swingMedium) speedDiff = (swingFast || swingSlow) ? 1 : 0;
-  if (pitchSlow && !swingSlow) speedDiff = swingMedium ? 1 : 2;
-
-  int score = 4 - heightDiff - speedDiff;
-
-  if (score >= 4) {
-    if (pitchHigh) return {"CRUSHED! Home run to deep left field.", "homerun", OUTCOME_HOMERUN};
-    if (pitchMiddle) return {"Solid line drive into center field. Double.", "double", OUTCOME_DOUBLE};
-    return {"Hard grounder through the infield. Base hit.", "single", OUTCOME_SINGLE};
+  if (pitchSpace > 0 && swingSpace > 0 &&
+      lookupPitchOutcome(
+        pitch.substring(0, pitchSpace),
+        pitch.substring(pitchSpace + 1),
+        swing.substring(0, swingSpace),
+        swing.substring(swingSpace + 1),
+        result
+      )) {
+    return result;
   }
 
-  if (score == 3) {
-    if (heightDiff == 0) return {"Good contact. Single into the outfield.", "single", OUTCOME_SINGLE};
-    return {"Weak contact. Blooper drops in for a single.", "single", OUTCOME_SINGLE};
-  }
-
-  if (score == 2) {
-    if (pitchFast && swingSlow) return {"Swing and miss. Late on the fastball.", "strike", OUTCOME_STRIKE};
-    if (pitchSlow && swingFast) return {"Out in front. Foul ball.", "foul", OUTCOME_FOUL};
-    return {"Foul tip. Still alive.", "foul", OUTCOME_FOUL};
-  }
-
-  if (score == 1) {
-    return {"Bad swing. Routine ground out.", "flyout", OUTCOME_OUT};
-  }
-
-  if (heightDiff >= 2) {
-    return {"Ball.", "ball", OUTCOME_BALL};
-  }
-
-  return {"Strike! Complete miss.", "strike", OUTCOME_STRIKE};
+  return {"Unable to resolve play.", "waiting", OUTCOME_STRIKE};
 }
 
 void handleReset() {
@@ -925,6 +843,8 @@ void setup() {
 #if ENABLE_LCD
   gfx->begin();
 
+  lcdScreenInit(gfx);
+
   if (TFT_BL >= 0) {
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, HIGH);
@@ -1017,7 +937,7 @@ void setup() {
   });
 
   server.begin();
-  drawQrCode(LOCAL_URL);
+  lcdScreenStart();
 
 #if IPIXEL_DIAGNOSTIC_MODE == 2
   Serial.println("iPixel diagnostic mode 2: Wi-Fi-on idle slot cycling.");
@@ -1033,6 +953,7 @@ void loop() {
 
   dnsServer.processNextRequest();
   server.handleClient();
+  lcdScreenLoop();
   processPendingIPixelResult();
   processPendingIPixelScoreboard();
 

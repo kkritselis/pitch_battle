@@ -1,0 +1,3549 @@
+[
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a high fast pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high fast pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high fast pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high fast pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to right. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into right field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the right field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high fast pitch. The batter swung center and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 60,
+          "text": "Right back up the middle, but the defense handles it cleanly.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A chopper up the middle sneaks through for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high fast pitch. The batter swung low and medium, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high fast pitch. The batter swung low and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to left. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into left field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the left field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a high medium pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high medium pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high medium pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high medium pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to right. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into right field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the right field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high medium pitch. The batter swung low and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high medium pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high medium pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high medium pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high medium pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high medium pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high medium pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high medium pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high medium pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high medium pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 60,
+          "text": "Right back up the middle, but the defense handles it cleanly.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A chopper up the middle sneaks through for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high medium pitch. The batter swung low and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high medium pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high medium pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high medium pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high medium pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high medium pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high medium pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high medium pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high medium pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high medium pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to left. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into left field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the left field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a high slow pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high slow pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high slow pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a high slow pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high slow pitch. The batter swung center and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high slow pitch. The batter swung low and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a high slow pitch. The batter swung low and medium, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A high slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The high slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a high slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the high slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the high slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the high slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the high slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the high slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The high slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 60,
+          "text": "Right back up the middle, but the defense handles it cleanly.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A chopper up the middle sneaks through for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a center fast pitch. The batter swung high and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A center fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The center fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a center fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the center fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the center fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the center fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the center fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the center fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The center fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a center fast pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center fast pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center fast pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center fast pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to right. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into right field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the right field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a center fast pitch. The batter swung low and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A center fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The center fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a center fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the center fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the center fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the center fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the center fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the center fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The center fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to left. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into left field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the left field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a center medium pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center medium pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center medium pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center medium pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to right. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into right field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the right field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a center slow pitch. The batter swung high and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A center slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The center slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a center slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the center slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the center slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the center slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the center slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the center slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The center slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to left. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into left field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the left field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a center slow pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center slow pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center slow pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a center slow pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a center slow pitch. The batter swung low and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A center slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The center slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a center slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the center slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the center slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the center slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the center slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the center slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The center slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "fly",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 60,
+          "text": "Right back up the middle, but the defense handles it cleanly.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A chopper up the middle sneaks through for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low fast pitch. The batter swung high and medium, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low fast pitch. The batter swung high and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low fast pitch. The batter swung center and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low fast pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low fast pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low fast pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low fast pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low fast pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low fast pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low fast pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low fast pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low fast pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a low fast pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low fast pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low fast pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low fast pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to right. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into right field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the right field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low medium pitch. The batter swung high and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low medium pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low medium pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low medium pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low medium pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low medium pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low medium pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low medium pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low medium pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low medium pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 60,
+          "text": "Right back up the middle, but the defense handles it cleanly.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A chopper up the middle sneaks through for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low medium pitch. The batter swung high and slow, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low medium pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low medium pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low medium pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low medium pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low medium pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low medium pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low medium pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low medium pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low medium pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the right side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to left. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into left field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the left field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a low medium pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low medium pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low medium pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low medium pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "right",
+      "trajectory": "ground",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the right line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to right. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the right side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into right field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the right field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low slow pitch. The batter swung high and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low slow pitch. The batter swung high and medium, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "high",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 60,
+          "text": "Right back up the middle, but the defense handles it cleanly.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A chopper up the middle sneaks through for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "none",
+      "trajectory": "none",
+      "power": "miss",
+      "responses": [
+        {
+          "weight": 10,
+          "text": "That was a low slow pitch. The batter swung center and fast, but missed it completely.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The pitcher wins that battle. A low slow pitch gets past the batter for a strike.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "Swing and a miss! The low slow pitch was too much for him.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "He chased a low slow pitch and came up empty.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter offered at the low slow pitch and missed for strike one.",
+          "action": "strike"
+        },
+        {
+          "weight": 10,
+          "text": "The batter checks his swing and lets the low slow pitch go by. Ball!",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "He holds up and watches the low slow pitch miss the zone. Ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "Good eye by the batter. He lays off the low slow pitch for a ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The batter isn't fooled. He takes the low slow pitch and the umpire calls ball.",
+          "action": "ball"
+        },
+        {
+          "weight": 10,
+          "text": "The low slow pitch stays outside and the batter wisely lets it pass. Ball.",
+          "action": "ball"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "center",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 50,
+          "text": "Hit right back up the middle, but the defense tracks it down.",
+          "action": "flyout"
+        },
+        {
+          "weight": 35,
+          "text": "Line drive up the middle for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "Driven deep into center field for extra bases.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "That ball rolls all the way to the wall in center.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "fast"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "infield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left side.",
+          "action": "foul"
+        },
+        {
+          "weight": 40,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 40,
+          "text": "A sharp grounder through the left side for a base hit.",
+          "action": "single"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "medium"
+    },
+    "result": {
+      "direction": "left",
+      "trajectory": "ground",
+      "power": "outfield",
+      "responses": [
+        {
+          "weight": 20,
+          "text": "He sends it foul down the left line.",
+          "action": "foul"
+        },
+        {
+          "weight": 20,
+          "text": "A deep pop up to left. The fielder makes the catch.",
+          "action": "flyout"
+        },
+        {
+          "weight": 20,
+          "text": "Grounded to the left side. Easy play at first.",
+          "action": "groundout"
+        },
+        {
+          "weight": 25,
+          "text": "Line drive into left field for a base hit.",
+          "action": "single"
+        },
+        {
+          "weight": 10,
+          "text": "That one gets past the outfielder. He is headed for second.",
+          "action": "double"
+        },
+        {
+          "weight": 5,
+          "text": "Deep into the left field corner. He is flying around the bases.",
+          "action": "triple"
+        }
+      ]
+    }
+  },
+  {
+    "pitch": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "swing": {
+      "height": "low",
+      "speed": "slow"
+    },
+    "result": {
+      "direction": "center",
+      "trajectory": "ground",
+      "power": "home_run",
+      "responses": [
+        {
+          "weight": 25,
+          "text": "That was a low slow pitch. The batter matched it perfectly. That ball is crushed! Way back and gone! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low slow pitch and the batter got every bit of that one. Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low slow pitch. No doubt about it. That one is headed for the bleachers! Home run!",
+          "action": "homerun"
+        },
+        {
+          "weight": 25,
+          "text": "That was a low slow pitch. A towering drive to deep center field and it is out of here! Perfect timing. Home run!",
+          "action": "homerun"
+        }
+      ]
+    }
+  }
+]
