@@ -13,10 +13,10 @@ This repo is a **rebuild** of an earlier Mac-based prototype.
 |                   | Mac prototype (previous)     | This repo (current)                                             |
 | ----------------- | ---------------------------- | --------------------------------------------------------------- |
 | Host              | Node.js on a Mac             | ESP32-C3                                                        |
-| Web app           | Served from Node             | Embedded in firmware (`src/main.cpp`)                           |
+| Web app           | Served from Node             | Embedded in firmware (`src/index.html` + JPG slices)            |
 | Wi-Fi             | Mac hotspot or local network | ESP32 access point + captive portal                             |
-| Round LCD QR code | Not part of prototype        | GC9A01 display on ESP32                                         |
-| Game logic        | Node                         | `resolvePlay()` in firmware                                     |
+| Round LCD         | Not part of prototype        | GC9A01 animated attract loop (`esp_screen.gif`)                 |
+| Game logic        | Node                         | Weighted outcome lookup + count-based walks/strikeouts          |
 | iPixel display    | Node BLE client (working)    | ESP32 BLE client with live scoreboard                           |
 | Animation uploads | Done via Mac tooling         | GIF slots via `setup/storeImages.py`; scoreboard live on slot 5 |
 
@@ -112,11 +112,60 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 - [x] Token stored in `localStorage` for reload persistence
 - [x] Server rejects pitch/swing from the wrong team (`403`)
 
-### Walks and strikeouts (partial Phase 5)
+### Walks and strikeouts
 
 - [x] Four balls = walk (advance batter, reset count)
 - [x] Three strikes = strikeout (out, reset count)
 - [x] iPixel scroll text for `"WALK"` and `"STRIKEOUT"` via pre-encoded frames in `include/ipixel_scroll_text.h`
+
+### Outcome lookup table
+
+- [x] Authoritative outcomes in `setup/pitching-battle-outcomes.json` (81 pitch/swing combos, weighted responses)
+- [x] `setup/generateOutcomes.py` → `include/pitch_outcomes_data.h`
+- [x] `src/pitch_outcomes.cpp` replaces the old formula-based `resolvePlay()` comparison
+- [x] Triple, ground out, and other hit/out types map to correct iPixel slots
+
+**Outcome:** Each pitch/swing lock resolves through a lookup table that matches the Mac prototype's outcome design. Walks and strikeouts are still derived from the ball/strike count after a ball or strike outcome, not from the JSON table directly.
+
+### Round LCD attract screen
+
+- [x] Replace boot QR code with full-screen animated GIF (`setup/esp_screen.gif`)
+- [x] `setup/generateEspScreenGif.py` → `include/esp_screen_gif.h`
+- [x] `src/lcd_screen.cpp` plays the loop on the GC9A01 round display
+
+**Outcome:** The round LCD shows a branded attract loop on boot instead of a static QR code. Players still join via the captive portal or `http://192.168.4.1`.
+
+### Phone web UI redesign
+
+- [x] Design mockup in `src/index.html` with six JPG background slices (`src/phone_*.jpg`, ~85 KB total)
+- [x] Asset pipeline: `setup/generateWebAssets.py` → `include/web_index.h` + `include/phone_assets.h`
+- [x] PlatformIO pre-build hook regenerates web assets before each compile
+- [x] **Join screen** — header art + Join Game button
+- [x] **Play screen** — live scoreboard, field diagram, PVP role text, pitch/swing pickers, lock-in button
+- [x] **Result screen** — outcome text in the choice panel + Next Pitch (`/api/reset`)
+- [x] Viewport scaling — fixed 953px-wide layout scaled to phone via `zoom` (Chrome) or `transform: scale()` + shell height
+- [x] `layoutApp()` / `ResizeObserver` fixes join-screen height sticking after game reveal (288px crop bug)
+- [x] Choice buttons — vertical stacked mockup style (class selectors; fixed `#id` vs `.class` mismatch)
+- [x] Base runners — hidden by default, red when occupied
+- [x] Result text sized for the result panel only (not PVP status line)
+
+**Outcome:** Two phones can join (Home then Away), see live game state from `/api/state`, lock pitch/swing choices, and advance through at-bats with the new art-directed UI. Flash usage is ~93% of 1280 KB after embedding HTML and JPGs.
+
+**Removed:** Inline `pageHtml()` string in `src/main.cpp`; the web UI is now edited in `src/index.html` and embedded at build time.
+
+### iPixel scoreboard layout fixes
+
+- [x] Scorebox-only template edits for rows 9–16 (x ≥ 46); left side (x < 46) preserved from original template
+- [x] Removed full-width bottom rule that spanned all 96 pixels
+- [x] Visit scores at y=2, home scores at y=10; 5px-tall score fill rects
+- [x] Count colors: balls/outs yellow, strikes cyan (contrast with labels)
+- [x] 2px divider between visit and home rows in the scorebox
+- [x] Scoreboard artwork moved to `assets/ipixel/`; `setup/storeImages.py` loads slot assets from there
+- [x] Ground out GIF on slot 9 (`setup/ground_out.gif`); fly out remains slot 8
+
+**Outcome:** Live scoreboard on slot 5 renders correctly — strikes/outs/diamond on the left are intact, visit/home rows and totals align on the right, and count digits use readable contrasting colors.
+
+**Regression fixed:** Early scorebox template edits wiped left-side rows, causing a strikes gap, clipped outs, and distorted base diamond. The fix merged the original left-side pixels with scorebox-only right-side changes.
 
 ---
 
@@ -126,17 +175,17 @@ The standalone game loop works end to end:
 
 1. ESP32 powers on
 2. Logo appears on the iPixel
-3. QR code appears on the round LCD
-4. Players scan, join Wi-Fi, and tap Join Game (Home then Away)
+3. Animated attract loop plays on the round LCD
+4. Players connect to Wi-Fi and tap Join Game (Home then Away)
 5. The pitching and batting teams lock their choices for the half
-6. ESP32 resolves the play
+6. ESP32 resolves the play via the weighted outcome lookup
 7. iPixel shows the result animation or scroll text (walk/strikeout)
 8. Scoreboard updates on slot 5
-9. Play continues through full innings
+9. Phones show the result and Next Pitch; play continues through full innings
 
 No laptop, cloud service, or external server required during gameplay.
 
----
+**Still open:** New Game button in the phone UI, player reconnection timeout, JSON escaping for `resultText`, and advanced situational rules (double plays, etc.). See [README.md](README.md) roadmap.
 
 ## iPixel diagnostic history
 

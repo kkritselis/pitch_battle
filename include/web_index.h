@@ -1,0 +1,886 @@
+#pragma once
+
+#include <Arduino.h>
+
+// src/index.html embedded for the phone web UI.
+// Regenerate with: python3 setup/embedWebIndex.py
+
+constexpr size_t WEB_INDEX_HTML_BYTES = 25346;
+const char WEB_INDEX_HTML[] PROGMEM = R"WEBINDEX(
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Pitch Battle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <style>
+        :root {
+            --design-width: 953;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        body {
+            margin: 0;
+            background-color: #101827;
+            color: white;
+            font-family: system-ui, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Scales the fixed 953px layout to the viewport width. */
+        #app-shell {
+            width: 100%;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        #app {
+            width: 953px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: space-around;
+            transform-origin: top center;
+            min-height: 100vh;
+        }
+
+        #header {
+            width: 100%;
+            height: 137px;
+            background-image: url('/phone_header.jpg');
+            background-size: 953px 137px;
+            background-repeat: no-repeat;
+            background-position: center top;
+            flex-shrink: 0;
+        }
+
+        #game-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            flex: 1;
+            width: 100%;
+        }
+
+        #count {
+            width: 100%;
+            height: 275px;
+            display: flex;
+            flex-direction: column;
+            background-image: url('/phone_count.jpg');
+            background-size: 953px 275px;
+            background-repeat: no-repeat;
+            background-position: center top;
+            flex-shrink: 0;
+        }
+
+        #row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            height: 100%;
+        }
+
+        #row div {
+            width: 20%;
+        }
+
+        #count-away, #count-home {
+            font-size: 90px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 100%;
+            margin-top: 48px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #count-inning {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 175%;
+            margin-top: 32px;
+            width: 100%;
+            height: 100%;
+        }
+
+        #count-balls, #count-strikes, #count-outs, #count-count {
+            font-size: 50px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 100%;
+            margin-top: 60px;
+        }
+
+        #field {
+            width: 100%;
+            height: 275px;
+            background-image: url('/phone_field.jpg');
+            background-size: 953px 275px;
+            background-repeat: no-repeat;
+            background-position: center top;
+            display: flex;
+            justify-content: center;
+            gap: 135px;
+            flex-shrink: 0;
+        }
+
+        #field span {
+            width: 45px;
+            height: 60px;
+            visibility: hidden;
+            opacity: 0;
+            background-color: #b71e23;
+            clip-path: polygon(38% 13%, 48% 23%, 39% 37%, 37% 56%, 38% 100%, 50% 70%, 61% 100%, 67% 57%, 67% 30%, 62% 20%, 58% 2%, 44% 2%);
+        }
+
+        #field span.occupied {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #field-second {
+            margin-top: 0;
+        }
+
+        #field-third, #field-first {
+            margin-top: 75px;
+        }
+
+        #pvp {
+            width: 100%;
+            height: 129px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 100%;
+            background-image: url('/phone_pvp.jpg');
+            background-size: 953px 129px;
+            background-repeat: no-repeat;
+            background-position: center top;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        #pvp-left, #pvp-right {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 8px;
+        }
+
+        #pvp-left-top, #pvp-right-top {
+            font-size: 30px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 100%;
+        }
+
+        #pvp-left-bottom, #pvp-right-bottom {
+            font-size: 16px;
+            margin-top: 6px;
+        }
+
+        #choice {
+            width: 100%;
+            height: 454px;
+            background-image: url('/phone_choice.jpg');
+            background-size: 953px 454px;
+            background-repeat: no-repeat;
+            background-position: center top;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 25px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .choice-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 60px;
+            align-items: stretch;
+            width: 100%;
+            flex: 1;
+            min-height: 340px;
+            padding: 0 24px;
+            box-sizing: border-box;
+        }
+
+        .choice-left,
+        .choice-right {
+            width: 40%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        #choice-hitter > h2,
+        #choice-pitcher > h2 {
+            margin: 0 0 8px;
+            font-size: 25px;
+            line-height: 1.1;
+            flex-shrink: 0;
+        }
+
+        .choice-left > h2,
+        .choice-right > h2 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            line-height: 1.1;
+            flex-shrink: 0;
+        }
+
+        .choice-left-buttons {
+            display: flex;
+            flex-direction: column;
+            border-radius: 20px;
+            width: 100%;
+            flex: 1;
+            min-height: 280px;
+            overflow: hidden;
+        }
+
+        .choice-right-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            width: 100%;
+            flex: 1;
+            min-height: 280px;
+            overflow: visible;
+        }
+
+        .choice-left-buttons button,
+        .choice-right-buttons button {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.1;
+            border: 1px solid grey;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .choice-left-buttons button {
+            flex: 1 1 0;
+            width: 100%;
+            min-height: 90px;
+            border-radius: 0;
+        }
+
+        .choice-left-buttons button.selected,
+        .choice-right-buttons button.selected {
+            background: rgba(255, 255, 255, 0.22);
+            border-color: #facc15;
+            color: #fef08a;
+        }
+
+        .choice-left-buttons button:disabled,
+        .choice-right-buttons button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .choice-right-buttons button {
+            flex: 0 0 30%;
+            width: 85%;
+            min-height: 90px;
+            border-radius: 20px;
+            margin: 0;
+        }
+
+        #choice-pitcher.hidden,
+        #choice-hitter.hidden,
+        #result-panel.hidden {
+            display: none !important;
+        }
+
+        #choice-hitter,
+        #choice-pitcher {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 12px 0 16px;
+            box-sizing: border-box;
+        }
+
+        #result-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 32px 24px;
+            box-sizing: border-box;
+        }
+
+        #result-text {
+            font-size: 67px;
+            line-height: 1.2;
+            margin: 0;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        #button-label {
+            font-size: 60px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        #button.join-mode #button-label {
+            color: black;
+        }
+
+        #button {
+            width: 100%;
+            height: 151px;
+            background-image: url('/phone_button.jpg');
+            background-size: 953px 151px;
+            background-repeat: no-repeat;
+            background-position: center top;
+            display: block;
+            position: relative;
+            font-size: 60px;
+            font-weight: bold;
+            text-align: center;
+            color: black;
+            flex-shrink: 0;
+            cursor: pointer;
+            user-select: none;
+            border: none;
+            padding: 0;
+        }
+
+        #button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        #join-msg {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 10px;
+            margin: 0;
+            font-size: 16px;
+            font-weight: normal;
+            color: #fca5a5;
+            min-height: 1.2em;
+            text-align: center;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-shell">
+    <div id="app">
+        <div id="header"></div>
+
+        <div id="game-screen" class="hidden">
+            <div id="count">
+                <div id="row">
+                    <div id="count-away">0</div>
+                    <div id="count-inning">
+                        <span id="count-inning-text">Top of the</span><br>
+                        <span id="count-inning-number" style="font-size: 48px;">First</span>
+                    </div>
+                    <div id="count-home">0</div>
+                </div>
+                <div id="row">
+                    <div id="count-balls">0</div>
+                    <div id="count-strikes">0</div>
+                    <div id="count-outs">0</div>
+                    <div id="count-count">0 - 0</div>
+                </div>
+            </div>
+            <div id="field">
+                <span id="field-third"></span>
+                <span id="field-second"></span>
+                <span id="field-first"></span>
+            </div>
+            <div id="pvp">
+                <div id="pvp-left">
+                    <span id="pvp-left-top">You Are Batting</span>
+                    <span id="pvp-left-bottom">Choose Your Swing</span>
+                </div>
+                <div id="pvp-right">
+                    <span id="pvp-right-top">Opponent Pitching</span>
+                    <span id="pvp-right-bottom">Waiting for pitch...</span>
+                </div>
+            </div>
+            <div id="choice">
+                <div id="choice-hitter">
+                    <h2>Choose Your Swing</h2>
+                    <div class="choice-row">
+                        <div class="choice-left">
+                            <h2>Swing Height</h2>
+                            <div class="choice-left-buttons">
+                                <button type="button" data-value="high">High</button>
+                                <button type="button" data-value="middle">Middle</button>
+                                <button type="button" data-value="low">Low</button>
+                            </div>
+                        </div>
+                        <div class="choice-right">
+                            <h2>Swing Timing</h2>
+                            <div class="choice-right-buttons">
+                                <button type="button" data-value="fast">Early / Fast</button>
+                                <button type="button" data-value="medium">On Time</button>
+                                <button type="button" data-value="slow">Late / Slow</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="choice-pitcher" class="hidden">
+                    <h2>Choose Your Pitch</h2>
+                    <div class="choice-row">
+                        <div class="choice-left">
+                            <h2>Pitch Height</h2>
+                            <div class="choice-left-buttons">
+                                <button type="button" data-value="high">High</button>
+                                <button type="button" data-value="middle">Middle</button>
+                                <button type="button" data-value="low">Low</button>
+                            </div>
+                        </div>
+                        <div class="choice-right">
+                            <h2>Pitch Speed</h2>
+                            <div class="choice-right-buttons">
+                                <button type="button" data-value="fast">Fast</button>
+                                <button type="button" data-value="medium">Medium</button>
+                                <button type="button" data-value="slow">Slow</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="result-panel" class="hidden">
+                    <p id="result-text"></p>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" id="button" class="join-mode">
+            <span id="button-label">Join Game</span>
+            <span id="join-msg"></span>
+        </button>
+    </div>
+    </div>
+
+<script>
+const DESIGN_WIDTH = 953;
+
+function applyScale() {
+  const app = document.getElementById("app");
+  const shell = document.getElementById("app-shell");
+  if (!app || !shell) {
+    return;
+  }
+
+  const scale = Math.min(1, document.documentElement.clientWidth / DESIGN_WIDTH);
+  app.style.transformOrigin = "top center";
+  app.style.transform = "none";
+  app.style.removeProperty("zoom");
+
+  // zoom scales the layout box (Chrome/Android); transform does not.
+  if (typeof app.style.zoom !== "undefined") {
+    app.style.zoom = String(scale);
+    shell.style.height = "auto";
+    return;
+  }
+
+  const height = app.scrollHeight;
+  app.style.transform = `scale(${scale})`;
+  shell.style.height = `${Math.ceil(height * scale)}px`;
+}
+
+function scheduleLayoutApp() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(applyScale);
+  });
+}
+
+function watchAppLayout() {
+  const app = document.getElementById("app");
+  if (!app || !("ResizeObserver" in window)) {
+    return;
+  }
+
+  new ResizeObserver(scheduleLayoutApp).observe(app);
+}
+
+let team = "";
+let role = "";
+let joined = false;
+let showingResult = false;
+
+const INNING_NAMES = ["", "First", "Second", "Third"];
+
+const selections = {
+  pitchHeight: "middle",
+  pitchSpeed: "medium",
+  swingHeight: "middle",
+  swingTiming: "medium",
+};
+
+function defaultSelections() {
+  selections.pitchHeight = "middle";
+  selections.pitchSpeed = "medium";
+  selections.swingHeight = "middle";
+  selections.swingTiming = "medium";
+}
+
+function syncChoiceButtons(panelId, heightValue, secondValue) {
+  const panel = document.getElementById(panelId);
+  const leftButtons = panel.querySelectorAll(".choice-left-buttons button");
+  const rightButtons = panel.querySelectorAll(".choice-right-buttons button");
+
+  leftButtons.forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.value === heightValue);
+  });
+  rightButtons.forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.value === secondValue);
+  });
+}
+
+function refreshChoiceButtons(locked) {
+  syncChoiceButtons("choice-hitter", selections.swingHeight, selections.swingTiming);
+  syncChoiceButtons("choice-pitcher", selections.pitchHeight, selections.pitchSpeed);
+
+  document.querySelectorAll("#choice-hitter button, #choice-pitcher button").forEach((btn) => {
+    btn.disabled = locked;
+  });
+}
+
+function bindChoicePanel(panelId, heightKey, secondKey) {
+  const panel = document.getElementById(panelId);
+  panel.querySelectorAll(".choice-left-buttons button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) {
+        return;
+      }
+      selections[heightKey] = btn.dataset.value;
+      refreshChoiceButtons(false);
+    });
+  });
+  panel.querySelectorAll(".choice-right-buttons button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) {
+        return;
+      }
+      selections[secondKey] = btn.dataset.value;
+      refreshChoiceButtons(false);
+    });
+  });
+}
+
+function isPlayerLocked(state) {
+  if (role === "hitter") {
+    return state.swingLocked;
+  }
+  return state.pitchLocked;
+}
+
+function showActionError(message) {
+  document.getElementById("pvp-right-bottom").textContent = message;
+}
+
+function roleForHalf(half) {
+  if (half === "top") {
+    return team === "home" ? "pitcher" : "hitter";
+  }
+  return team === "home" ? "hitter" : "pitcher";
+}
+
+function inningName(inning) {
+  return INNING_NAMES[inning] || String(inning);
+}
+
+function setBaseOccupied(id, occupied) {
+  document.getElementById(id).classList.toggle("occupied", occupied);
+}
+
+function statusMessage(state) {
+  if (state.pitchLocked && state.swingLocked) {
+    return "Both players locked. Resolving...";
+  }
+  if (state.pitchLocked) {
+    return role === "pitcher"
+      ? "Pitch locked. Waiting for hitter."
+      : "Pitcher is ready. Lock your swing.";
+  }
+  if (state.swingLocked) {
+    return role === "hitter"
+      ? "Swing locked. Waiting for pitcher."
+      : "Hitter is ready. Lock your pitch.";
+  }
+  return "Waiting for both players to lock in.";
+}
+
+function updatePvpPanel() {
+  const leftTop = document.getElementById("pvp-left-top");
+  const leftBottom = document.getElementById("pvp-left-bottom");
+  const rightTop = document.getElementById("pvp-right-top");
+
+  if (role === "hitter") {
+    leftTop.textContent = "You Are Batting";
+    leftBottom.textContent = "Choose Your Swing";
+    rightTop.textContent = "Opponent Pitching";
+  } else {
+    leftTop.textContent = "You Are Pitching";
+    leftBottom.textContent = "Choose Your Pitch";
+    rightTop.textContent = "Opponent Batting";
+  }
+}
+
+function renderState(state) {
+  role = roleForHalf(state.half);
+  const hasResult = Boolean(state.result) && state.pitchLocked && state.swingLocked;
+
+  document.getElementById("count-away").textContent = state.awayScore;
+  document.getElementById("count-home").textContent = state.homeScore;
+  document.getElementById("count-balls").textContent = state.balls;
+  document.getElementById("count-strikes").textContent = state.strikes;
+  document.getElementById("count-outs").textContent = state.outs;
+  document.getElementById("count-count").textContent =
+    `${state.balls} - ${state.strikes}`;
+
+  document.getElementById("count-inning-text").textContent =
+    state.half === "top" ? "Top of the" : "Bottom of the";
+  document.getElementById("count-inning-number").textContent =
+    inningName(state.inning);
+
+  setBaseOccupied("field-first", state.runnerFirst);
+  setBaseOccupied("field-second", state.runnerSecond);
+  setBaseOccupied("field-third", state.runnerThird);
+
+  updatePvpPanel();
+  document.getElementById("pvp-right-bottom").textContent =
+    hasResult ? "" : statusMessage(state);
+
+  const hitterPanel = document.getElementById("choice-hitter");
+  const pitcherPanel = document.getElementById("choice-pitcher");
+  const resultPanel = document.getElementById("result-panel");
+  const button = document.getElementById("button");
+  const buttonLabel = document.getElementById("button-label");
+
+  if (hasResult) {
+    showingResult = true;
+    hitterPanel.classList.add("hidden");
+    pitcherPanel.classList.add("hidden");
+    resultPanel.classList.remove("hidden");
+    document.getElementById("result-text").textContent = state.result;
+    buttonLabel.textContent = "Next Pitch";
+    button.disabled = false;
+    refreshChoiceButtons(true);
+  } else {
+    showingResult = false;
+    resultPanel.classList.add("hidden");
+    const playerLocked = isPlayerLocked(state);
+    if (role === "hitter") {
+      hitterPanel.classList.remove("hidden");
+      pitcherPanel.classList.add("hidden");
+      buttonLabel.textContent = "Lock In Your Swing";
+    } else {
+      hitterPanel.classList.add("hidden");
+      pitcherPanel.classList.remove("hidden");
+      buttonLabel.textContent = "Lock In Your Pitch";
+    }
+    button.disabled = playerLocked;
+    refreshChoiceButtons(playerLocked);
+  }
+
+  scheduleLayoutApp();
+}
+
+function clientId() {
+  let id = localStorage.getItem("pitchBattleId");
+  if (!id) {
+    id = "p-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem("pitchBattleId", id);
+  }
+  return id;
+}
+
+async function postJson(url, data) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data)
+  });
+  return await res.json();
+}
+
+function showJoinScreen() {
+  joined = false;
+  showingResult = false;
+  document.getElementById("game-screen").classList.add("hidden");
+  document.getElementById("button-label").textContent = "Join Game";
+  document.getElementById("join-msg").textContent = "";
+  document.getElementById("button").disabled = false;
+  document.getElementById("button").classList.add("join-mode");
+  scheduleLayoutApp();
+}
+
+function showGameScreen() {
+  joined = true;
+  document.getElementById("game-screen").classList.remove("hidden");
+  document.getElementById("join-msg").textContent = "";
+  document.getElementById("button").disabled = false;
+  document.getElementById("button").classList.remove("join-mode");
+  scheduleLayoutApp();
+}
+
+async function joinGame() {
+  const joinMsg = document.getElementById("join-msg");
+  const button = document.getElementById("button");
+  joinMsg.textContent = "Joining...";
+  button.disabled = true;
+
+  try {
+    const res = await postJson("/api/join", {token: clientId()});
+    if (!res || res.team === "full") {
+      joinMsg.textContent = "Game is full. Two players have already joined.";
+      button.disabled = false;
+      return;
+    }
+    team = res.team;
+  } catch (err) {
+    joinMsg.textContent = "Could not join. Try again.";
+    button.disabled = false;
+    console.log(err);
+    return;
+  }
+
+  showGameScreen();
+  defaultSelections();
+  refreshChoiceButtons(false);
+  refreshState();
+}
+
+async function refreshState() {
+  if (!joined || !team) {
+    return;
+  }
+  try {
+    const res = await fetch("/api/state");
+    renderState(await res.json());
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function nextPitch() {
+  const res = await fetch("/api/reset", {method: "POST"});
+  defaultSelections();
+  refreshChoiceButtons(false);
+  renderState(await res.json());
+}
+
+async function submitPitch() {
+  const button = document.getElementById("button");
+  button.disabled = true;
+  const res = await postJson("/api/pitch", {
+    height: selections.pitchHeight,
+    speed: selections.pitchSpeed,
+    token: clientId(),
+  });
+  if (res.error) {
+    showActionError(res.error);
+    button.disabled = false;
+    return;
+  }
+  renderState(res);
+}
+
+async function submitSwing() {
+  const button = document.getElementById("button");
+  button.disabled = true;
+  const res = await postJson("/api/swing", {
+    height: selections.swingHeight,
+    timing: selections.swingTiming,
+    token: clientId(),
+  });
+  if (res.error) {
+    showActionError(res.error);
+    button.disabled = false;
+    return;
+  }
+  renderState(res);
+}
+
+async function lockInChoice() {
+  if (role === "hitter") {
+    await submitSwing();
+  } else {
+    await submitPitch();
+  }
+}
+
+document.getElementById("button").addEventListener("click", () => {
+  if (!joined) {
+    joinGame();
+    return;
+  }
+  if (showingResult) {
+    nextPitch();
+    return;
+  }
+  lockInChoice();
+});
+
+bindChoicePanel("choice-hitter", "swingHeight", "swingTiming");
+bindChoicePanel("choice-pitcher", "pitchHeight", "pitchSpeed");
+defaultSelections();
+refreshChoiceButtons(false);
+
+window.addEventListener("resize", scheduleLayoutApp);
+window.addEventListener("orientationchange", scheduleLayoutApp);
+watchAppLayout();
+scheduleLayoutApp();
+
+setInterval(refreshState, 1000);
+</script>
+</body>
+</html>
+)WEBINDEX";

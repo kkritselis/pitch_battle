@@ -16,16 +16,18 @@ See [project_history.md](project_history.md) for how the Mac prototype was porte
 
 - **Wi-Fi access point** — SSID `PitchBattle`, password `pitchbattle`
 - **Captive portal** — DNS redirect plus probe routes for Android and iOS
-- **Round LCD** — QR code and connection info on boot (GC9A01, 240x240)
-- **Web app** — Join Game screen with team-based pitch/bat controls (HTML/CSS/JS in firmware)
+- **Round LCD** — Full-screen animated `esp_screen.gif` on boot (GC9A01, 240×240)
+- **Phone web UI** — JPG slice design (`src/index.html`); join screen, live scoreboard, pitch/swing controls, result panel
+- **Web assets in firmware** — JPG backgrounds and HTML embedded via `setup/generateWebAssets.py` (runs before each build)
 - **Team assignment** — First phone = Home, second = Away; roles follow the inning half
 - **Server-side role enforcement** — Only the pitching team can pitch; only the batting team can swing
 - **REST API** — Join, pitch, swing, state, reset, and new-game endpoints
-- **At-bat resolution** — `resolvePlay()` compares pitch height/speed to swing height/timing
+- **At-bat resolution** — Weighted outcome lookup from `setup/pitching-battle-outcomes.json` (81 pitch/swing combos)
 - **Game state** — Inning, score, count, outs, and base runners persist across at-bats
 - **Walks and strikeouts** — Four balls advances the batter; three strikes records an out
 - **iPixel display** — Logo on boot, GIF result animations, scroll text for walk/strikeout, live scoreboard on slot 5
-- **Next-pitch flow** — Web UI reset button calls `/api/reset` after a resolved play
+- **Live scoreboard** — 96×16 template with visit/home rows, count colors, base runners, and on-device PNG push
+- **Next-pitch flow** — Result screen + **Next Pitch** button calls `/api/reset`
 
 ### Known rough edges
 
@@ -34,6 +36,7 @@ See [project_history.md](project_history.md) for how the Mac prototype was porte
 - iPixel commands use raw ATT handle `0x0006` on this unit
 - iPixel notify ACKs never arrive on the ESP32 link; firmware treats a fully-written window as success
 - On-device PNG compression uses a fixed-Huffman DEFLATE encoder in `src/scoreboard.cpp` (ROM miniz cannot allocate on ESP32-C3)
+- **New Game** is not yet exposed in the phone UI (API exists at `/api/new-game`)
 
 ---
 
@@ -41,7 +44,7 @@ See [project_history.md](project_history.md) for how the Mac prototype was porte
 
 ### ESP32-C3 DevKitM-1
 
-Hosts Wi-Fi, web server, game engine, iPixel BLE client, and the round LCD QR code.
+Hosts Wi-Fi, web server, game engine, iPixel BLE client, and the round LCD attract screen.
 
 ### Round LCD (onboard)
 
@@ -72,7 +75,7 @@ Hosts Wi-Fi, web server, game engine, iPixel BLE client, and the round LCD QR co
          |  Wi-Fi AP + portal      |
          |  Web server + UI        |
          |  Game engine            |
-         |  Round LCD (QR code)    |
+         |  Round LCD (esp_screen.gif) |
          |  BLE client (iPixel)    |
          +-------------------------+
                       |
@@ -109,6 +112,7 @@ After flashing:
 | Method | Path            | Description                           |
 | ------ | --------------- | ------------------------------------- |
 | `GET`  | `/`             | Game web UI                           |
+| `GET`  | `/phone_*.jpg`  | Phone UI background slices (embedded) |
 | `POST` | `/api/join`     | Claim a team (Home first, then Away)  |
 | `GET`  | `/api/state`    | Current game state (JSON)             |
 | `POST` | `/api/pitch`    | Lock pitch selection (pitching team)  |
@@ -179,7 +183,7 @@ When both players lock, `result` holds the outcome text and `image` selects the 
 | `homerun`, `triple`, `double`, `single` | Stored GIF slot |
 | `ball`, `strike` | Ball animation (slot 6) |
 | `foul` | Foul animation (slot 7) |
-| `flyout`, `out` | Flyout animation (slot 8) |
+| `flyout`, `groundout`, `out` | Flyout (slot 8) or ground out (slot 9) |
 | `walk` | Scrolling text `"WALK"` |
 | `strikeout` | Scrolling text `"STRIKEOUT"` |
 | `waiting` | No result yet |
@@ -189,6 +193,39 @@ Scoreboard fields persist until `/api/new-game`.
 ### Captive portal routes
 
 `/generate_204`, `/hotspot-detect.html`, `/connecttest.txt`, `/canonical.html`, `/ncsi.txt`, `/fwlink`, `/success.txt`, `/favicon.ico`
+
+---
+
+## Phone web UI
+
+Design source: `src/index.html`. Background art: `src/phone_*.jpg` (~85 KB total, JPEG).
+
+After editing HTML or JPGs, regenerate embedded assets (PlatformIO does this automatically before build):
+
+```bash
+python3 setup/generateWebAssets.py
+pio run -t upload
+```
+
+The UI scales a fixed 953px-wide layout to the phone viewport. Screens:
+
+1. **Join** — header + Join Game button
+2. **Play** — scoreboard, field, PVP status, pitch/swing pickers, lock-in button
+3. **Result** — outcome text in the choice panel + Next Pitch
+
+---
+
+## Outcome lookup table
+
+Play results come from `setup/pitching-battle-outcomes.json` (81 pitch height/speed × swing height/timing combos, weighted responses).
+
+Regenerate the firmware lookup after editing the JSON:
+
+```bash
+python3 setup/generateOutcomes.py
+```
+
+This writes `include/pitch_outcomes_data.h`. Walks and strikeouts are still derived from the count after a ball/strike outcome, not from the JSON table.
 
 ---
 
@@ -272,14 +309,14 @@ See [project_history.md](project_history.md) for the full diagnostic test order 
 
 ### Game rules
 
-- [ ] Triple as a resolved hit outcome
 - [ ] Double plays, sacrifice flies, and similar situational rules
 - [ ] Full nine-inning game polish (extra innings, mercy rules, etc.)
 
 ### UI and logic
 
-- [ ] UI refinements (layout, feedback, scoreboard on phones)
-- [ ] Game logic improvements (pitch/swing resolution tuning, edge cases)
+- [ ] **New Game** button in the phone UI (wire to `/api/new-game`)
+- [ ] Outcome text tuning and additional flavor responses
+- [ ] Strike animation slot (discussed; not wired yet)
 
 ### Infrastructure
 
@@ -296,18 +333,34 @@ See [project_history.md](project_history.md) for the full diagnostic test order 
 pitch_battle/
   include/
     config.h                       Wi-Fi, TFT pins, iPixel settings
+    esp_screen_gif.h                 Round LCD GIF (generated)
     ipixel.h                         iPixel BLE API
     ipixel_scroll_text.h             Pre-encoded walk/strikeout scroll frames
+    phone_assets.h                   Phone JPG slices (generated)
+    pitch_outcomes.h                 Outcome lookup API
+    pitch_outcomes_data.h            Outcome table (generated)
     scoreboard.h                     Dynamic scoreboard render API
+    web_index.h                      Embedded phone HTML (generated)
   setup/
     storeImages.py                   Upload GIF slot assets (Mac)
     generateScrollTextPayloads.py    Regenerate scroll-text BLE payloads
-    *.gif                            GIF assets for slots 1–4, 6–10
+    generateOutcomes.py              JSON → pitch_outcomes_data.h
+    generateWebAssets.py             index.html + JPGs → firmware headers
+    generateEspScreenGif.py          esp_screen.gif → esp_screen_gif.h
+    renderScoreboardTest.py          Local scoreboard PNG preview
+    pitching-battle-outcomes.json    Weighted play outcomes
+    esp_screen.gif                   Round LCD attract loop
+    *.gif                            GIF assets for iPixel slots
   src/
-    main.cpp                         Wi-Fi, portal, web UI, game logic
+    index.html                       Phone UI source (edit this)
+    phone_*.jpg                      Phone UI background slices
+    main.cpp                         Wi-Fi, portal, game logic
     ipixel.cpp                       iPixel BLE client
-    scoreboard.cpp                   96x16 scoreboard renderer and PNG encoder
+    scoreboard.cpp                   96×16 scoreboard renderer and PNG encoder
+    pitch_outcomes.cpp               Outcome lookup
+    lcd_screen.cpp                   Round LCD GIF playback
+  assets/ipixel/                     Scoreboard template and test PNGs
   project_history.md                 Completed milestones and bring-up notes
-  platformio.ini                     Board and library dependencies
+  platformio.ini                     Board, libraries, pre-build web asset hook
   LICENSE                            MIT
 ```

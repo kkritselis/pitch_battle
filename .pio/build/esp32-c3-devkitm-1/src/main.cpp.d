@@ -189,7 +189,8 @@
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/libraries/DNSServer/src/DNSServer.h \
  /Users/keithkritselis/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFiUdp.h \
  include/config.h include/ipixel.h include/scoreboard.h \
- include/lcd_screen.h include/pitch_outcomes.h \
+ include/lcd_screen.h include/phone_assets.h include/pitch_outcomes.h \
+ include/web_index.h \
  .pio/libdeps/esp32-c3-devkitm-1/GFX\ Library\ for\ Arduino/src/Arduino_GFX_Library.h \
  .pio/libdeps/esp32-c3-devkitm-1/GFX\ Library\ for\ Arduino/src/Arduino_DataBus.h \
  .pio/libdeps/esp32-c3-devkitm-1/GFX\ Library\ for\ Arduino/src/YCbCr2RGB.h \

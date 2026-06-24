@@ -5,7 +5,9 @@
 #include "config.h"
 #include "ipixel.h"
 #include "lcd_screen.h"
+#include "phone_assets.h"
 #include "pitch_outcomes.h"
+#include "web_index.h"
 
 #if ENABLE_LCD
   #include <Arduino_GFX_Library.h>
@@ -94,309 +96,12 @@ ScoreboardState currentScoreboardState() {
   return state;
 }
 
-String pageHtml() {
-  return R"HTML(
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Pitch Battle</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #101827;
-      color: white;
-      display: grid;
-      min-height: 100vh;
-      place-items: center;
-    }
-    main {
-      width: min(440px, calc(100% - 32px));
-      background: #1f2937;
-      border: 1px solid #374151;
-      border-radius: 16px;
-      padding: 20px;
-    }
-    h1 { margin-top: 0; }
-    button, select {
-      width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      border-radius: 10px;
-      border: 1px solid #4b5563;
-      font: inherit;
-    }
-    button {
-      background: #2563eb;
-      color: white;
-      font-weight: 800;
-    }
-    .muted { color: #9ca3af; }
-    .grid { display: grid; gap: 8px; }
-    button.secondary {
-      background: #374151;
-      color: #e5e7eb;
-    }
-    #resultBox {
-      margin-top: 12px;
-      padding: 16px;
-      background: #0b1220;
-      border: 1px solid #374151;
-      border-radius: 12px;
-      text-align: center;
-    }
-    #resultText {
-      margin: 0 0 12px;
-      font-size: 1.15rem;
-      line-height: 1.35;
-    }
-    .status {
-      min-height: 1.2em;
-      color: #9ca3af;
-    }
-    #scoreboard {
-      display: grid;
-      gap: 8px;
-      margin: 12px 0;
-      padding: 12px;
-      border: 1px solid #374151;
-      border-radius: 12px;
-      background: #111827;
-    }
-    .score-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .bases {
-      letter-spacing: 0.08em;
-    }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Pitch Battle</h1>
-    <p class="muted">ESP32 host is running. This is the first local app screen.</p>
-
-    <div id="role">
-      <button onclick="joinGame()">Join Game</button>
-      <p id="joinMsg" class="muted"></p>
-    </div>
-
-    <div id="controls" style="display:none">
-      <h2 id="roleTitle"></h2>
-
-      <div id="scoreboard">
-        <div class="score-row">
-          <strong id="inningText">Top 1</strong>
-          <strong id="scoreText">Away 0 - Home 0</strong>
-        </div>
-        <div class="score-row muted">
-          <span id="countText">Count 0-0, 0 out</span>
-          <span id="basesText" class="bases">Bases ---</span>
-        </div>
-      </div>
-
-      <div id="playControls">
-        <div id="pitcherControls" class="grid" style="display:none">
-          <select id="pitchHeight">
-            <option value="high">High</option>
-            <option value="middle">Middle</option>
-            <option value="low">Low</option>
-          </select>
-          <select id="pitchSpeed">
-            <option value="fast">Fast</option>
-            <option value="medium">Medium</option>
-            <option value="slow">Slow</option>
-          </select>
-          <button id="lockPitch" onclick="submitPitch()">Lock Pitch</button>
-        </div>
-
-        <div id="hitterControls" class="grid" style="display:none">
-          <select id="swingHeight">
-            <option value="high">High</option>
-            <option value="middle">Middle</option>
-            <option value="low">Low</option>
-          </select>
-          <select id="swingTiming">
-            <option value="fast">Early / Fast</option>
-            <option value="medium">On Time</option>
-            <option value="slow">Late / Slow</option>
-          </select>
-          <button id="lockSwing" onclick="submitSwing()">Lock Swing</button>
-        </div>
-      </div>
-
-      <p id="status" class="status"></p>
-
-      <div id="resultBox" style="display:none">
-        <h2 id="resultText"></h2>
-        <button class="secondary" onclick="nextPitch()">Next Pitch</button>
-        <button class="secondary" onclick="newGame()">New Game</button>
-      </div>
-    </div>
-  </main>
-
-<script>
-let team = "";
-let role = "";
-
-function clientId() {
-  let id = localStorage.getItem("pitchBattleId");
-  if (!id) {
-    id = "p-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem("pitchBattleId", id);
-  }
-  return id;
+void sendPhoneJpg(const uint8_t *data, size_t length) {
+  server.send_P(200, "image/jpeg", reinterpret_cast<const char *>(data), length);
 }
 
-function roleForHalf(half) {
-  if (half === "top") {
-    return team === "home" ? "pitcher" : "hitter";
-  }
-  return team === "home" ? "hitter" : "pitcher";
-}
-
-async function joinGame() {
-  const joinMsg = document.getElementById("joinMsg");
-  joinMsg.textContent = "Joining...";
-  try {
-    const res = await postJson("/api/join", {token: clientId()});
-    if (!res || res.team === "full") {
-      joinMsg.textContent = "Game is full. Two players have already joined.";
-      return;
-    }
-    team = res.team;
-  } catch (err) {
-    joinMsg.textContent = "Could not join. Try again.";
-    console.log(err);
-    return;
-  }
-
-  document.getElementById("role").style.display = "none";
-  document.getElementById("controls").style.display = "block";
-  refreshState();
-}
-
-async function postJson(url, data) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data)
-  });
-  return await res.json();
-}
-
-function renderState(state) {
-  const statusEl = document.getElementById("status");
-  const resultBox = document.getElementById("resultBox");
-  const playControls = document.getElementById("playControls");
-  const hasResult = state.result && state.pitchLocked && state.swingLocked;
-  const halfText = state.half === "top" ? "Top" : "Bottom";
-
-  role = roleForHalf(state.half);
-  const teamLabel = team === "home" ? "Home" : "Away";
-  const roleLabel = role === "pitcher" ? "Pitching" : "Batting";
-  document.getElementById("roleTitle").textContent = `${teamLabel} - ${roleLabel}`;
-  document.getElementById("pitcherControls").style.display =
-    role === "pitcher" ? "grid" : "none";
-  document.getElementById("hitterControls").style.display =
-    role === "hitter" ? "grid" : "none";
-  const outText = state.outs === 1 ? "out" : "outs";
-  const bases =
-    (state.runnerFirst ? "1" : "-") +
-    (state.runnerSecond ? "2" : "-") +
-    (state.runnerThird ? "3" : "-");
-
-  document.getElementById("inningText").textContent =
-    `${halfText} ${state.inning}`;
-  document.getElementById("scoreText").textContent =
-    `Away ${state.awayScore} - Home ${state.homeScore}`;
-  document.getElementById("countText").textContent =
-    `Count ${state.balls}-${state.strikes}, ${state.outs} ${outText}`;
-  document.getElementById("basesText").textContent = `Bases ${bases}`;
-
-  if (hasResult) {
-    document.getElementById("resultText").textContent = state.result;
-    resultBox.style.display = "block";
-    playControls.style.display = "none";
-    statusEl.textContent = "";
-    return;
-  }
-
-  resultBox.style.display = "none";
-  playControls.style.display = "block";
-
-  if (state.pitchLocked && state.swingLocked) {
-    statusEl.textContent = "Both players locked. Resolving...";
-  } else if (state.pitchLocked) {
-    statusEl.textContent = role === "pitcher"
-      ? "Pitch locked. Waiting for hitter."
-      : "Pitcher is ready. Lock your swing.";
-  } else if (state.swingLocked) {
-    statusEl.textContent = role === "hitter"
-      ? "Swing locked. Waiting for pitcher."
-      : "Hitter is ready. Lock your pitch.";
-  } else {
-    statusEl.textContent = "Waiting for both players to lock in.";
-  }
-}
-
-async function submitPitch() {
-  const data = {
-    height: document.getElementById("pitchHeight").value,
-    speed: document.getElementById("pitchSpeed").value,
-    token: clientId()
-  };
-  const res = await postJson("/api/pitch", data);
-  if (res.error) {
-    document.getElementById("status").textContent = res.error;
-    return;
-  }
-  renderState(res);
-}
-
-async function submitSwing() {
-  const data = {
-    height: document.getElementById("swingHeight").value,
-    timing: document.getElementById("swingTiming").value,
-    token: clientId()
-  };
-  const res = await postJson("/api/swing", data);
-  if (res.error) {
-    document.getElementById("status").textContent = res.error;
-    return;
-  }
-  renderState(res);
-}
-
-async function nextPitch() {
-  const res = await fetch("/api/reset", {method: "POST"});
-  renderState(await res.json());
-}
-
-async function newGame() {
-  const res = await fetch("/api/new-game", {method: "POST"});
-  renderState(await res.json());
-}
-
-async function refreshState() {
-  if (!team) return;
-  try {
-    const res = await fetch("/api/state");
-    renderState(await res.json());
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-setInterval(refreshState, 1000);
-</script>
-</body>
-</html>
-)HTML";
+void handleRoot() {
+  server.send_P(200, "text/html", WEB_INDEX_HTML);
 }
 
 #if ENABLE_LCD
@@ -431,10 +136,6 @@ void drawCenteredText(const char *text, int designY, uint16_t color, int size) {
   (void)size;
 }
 #endif
-
-void handleRoot() {
-  server.send(200, "text/html", pageHtml());
-}
 
 uint8_t &battingScore() {
   return gameState.topHalf ? gameState.awayScore : gameState.homeScore;
@@ -902,6 +603,24 @@ void setup() {
   server.on("/api/new-game", HTTP_POST, handleNewGame);
 
   server.on("/", HTTP_GET, handleRoot);
+  server.on("/phone_header.jpg", HTTP_GET, []() {
+    sendPhoneJpg(PHONE_HEADER_JPG, PHONE_HEADER_JPG_BYTES);
+  });
+  server.on("/phone_count.jpg", HTTP_GET, []() {
+    sendPhoneJpg(PHONE_COUNT_JPG, PHONE_COUNT_JPG_BYTES);
+  });
+  server.on("/phone_field.jpg", HTTP_GET, []() {
+    sendPhoneJpg(PHONE_FIELD_JPG, PHONE_FIELD_JPG_BYTES);
+  });
+  server.on("/phone_pvp.jpg", HTTP_GET, []() {
+    sendPhoneJpg(PHONE_PVP_JPG, PHONE_PVP_JPG_BYTES);
+  });
+  server.on("/phone_choice.jpg", HTTP_GET, []() {
+    sendPhoneJpg(PHONE_CHOICE_JPG, PHONE_CHOICE_JPG_BYTES);
+  });
+  server.on("/phone_button.jpg", HTTP_GET, []() {
+    sendPhoneJpg(PHONE_BUTTON_JPG, PHONE_BUTTON_JPG_BYTES);
+  });
   server.on("/api/join", HTTP_POST, handleJoin);
   server.on("/api/pitch", HTTP_POST, handlePitch);
   server.on("/api/swing", HTTP_POST, handleSwing);
