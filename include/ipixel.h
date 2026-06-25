@@ -18,6 +18,10 @@ bool ipixelShowSlotAtHandle(uint8_t slot, uint16_t handle, bool waitForAck);
 bool ipixelBusy();
 void showIPixelScoreboard(const ScoreboardState &state);
 void showIPixelResult(const String &imageName, const ScoreboardState &state);
+bool showIPixelBanner(const char *text);
+bool showIPixelAttractLogo();
+void ipixelNotifyFirstPlayResolved();
+bool ipixelAttractModeActive();
 
 #else
 
@@ -33,5 +37,9 @@ inline bool ipixelShowSlotAtHandle(uint8_t, uint16_t, bool) { return false; }
 inline bool ipixelBusy() { return false; }
 inline void showIPixelScoreboard(const ScoreboardState &) {}
 inline void showIPixelResult(const String &, const ScoreboardState &) {}
+inline bool showIPixelBanner(const char *) { return false; }
+inline bool showIPixelAttractLogo() { return false; }
+inline void ipixelNotifyFirstPlayResolved() {}
+inline bool ipixelAttractModeActive() { return false; }
 
 #endif

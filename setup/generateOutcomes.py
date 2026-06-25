@@ -25,6 +25,77 @@ ACTIONS = {
     "groundout": "PITCH_ACTION_GROUNDOUT",
 }
 
+# Injected into play-only combos (weights must sum to 100 with PLAY_WEIGHT_BUDGET).
+EXTRA_STRIKE_WEIGHT = 20
+EXTRA_BALL_WEIGHT = 10
+PLAY_WEIGHT_BUDGET = 100 - EXTRA_STRIKE_WEIGHT - EXTRA_BALL_WEIGHT
+
+EXTRA_STRIKE_RESPONSES = [
+    {
+        "weight": 4,
+        "text": "Swing and a miss!",
+        "action": "strike",
+    },
+    {
+        "weight": 3,
+        "text": "He chased that one and came up empty.",
+        "action": "strike",
+    },
+    {
+        "weight": 3,
+        "text": "The bat never touched it. Strike!",
+        "action": "strike",
+    },
+]
+
+EXTRA_BALL_RESPONSES = [
+    {
+        "weight": 3,
+        "text": "Ball, outside the zone.",
+        "action": "ball",
+    },
+    {
+        "weight": 2,
+        "text": "Good eye. He takes it for a ball.",
+        "action": "ball",
+    },
+]
+
+
+def scale_weights(items: list[dict], target: int) -> list[dict]:
+    total = sum(item["weight"] for item in items)
+    if total <= 0:
+        return items
+
+    scaled: list[dict] = []
+    running = 0
+    for index, item in enumerate(items):
+        if index == len(items) - 1:
+            weight = target - running
+        else:
+            weight = round(item["weight"] * target / total)
+            running += weight
+        scaled.append({**item, "weight": weight})
+    return scaled
+
+
+def expand_responses(responses: list[dict]) -> list[dict]:
+    play = [item for item in responses if item["action"] not in ("strike", "ball")]
+    if not play:
+        return responses
+
+    expanded = scale_weights(play, PLAY_WEIGHT_BUDGET)
+    expanded.extend(EXTRA_STRIKE_RESPONSES)
+    expanded.extend(EXTRA_BALL_RESPONSES)
+
+    total_weight = sum(item["weight"] for item in expanded)
+    if total_weight != 100:
+        raise SystemExit(
+            f"Expanded combo weights sum to {total_weight}, expected 100 "
+            f"(play={PLAY_WEIGHT_BUDGET}, strike={EXTRA_STRIKE_WEIGHT}, ball={EXTRA_BALL_WEIGHT})"
+        )
+    return expanded
+
 
 def combo_index(pitch_height: str, pitch_speed: str, swing_height: str, swing_speed: str) -> int:
     ph = HEIGHTS.index(pitch_height)
@@ -74,7 +145,7 @@ def main() -> None:
     entry_meta: list[tuple[int, int]] = []
 
     for idx in range(81):
-        responses = by_index[idx]["result"]["responses"]
+        responses = expand_responses(by_index[idx]["result"]["responses"])
         total_weight = sum(item["weight"] for item in responses)
         if total_weight != 100:
             raise SystemExit(f"Combo {idx} weights sum to {total_weight}, expected 100")

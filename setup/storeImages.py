@@ -24,7 +24,7 @@ FILES = [
     (7, "foul.gif"),
     (8, "fly_out.gif"),
     (9, "ground_out.gif"),
-    (10, "logo.gif"),
+    (10, "strike.gif"),
 ]
 
 async def resolve_address():

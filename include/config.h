@@ -4,6 +4,9 @@
 #define AP_PASSWORD "pitchbattle"
 #define LOCAL_URL "http://192.168.4.1"
 
+// Regulation length; game ends after the bottom of this inning is complete.
+#define GAME_INNINGS 3
+
 // Set to 0 if the display pin mapping is wrong and you just want to test the web server.
 #define ENABLE_LCD 1
 
@@ -97,4 +100,4 @@
 #define IPIXEL_SLOT_FOUL 7
 #define IPIXEL_SLOT_FLYOUT 8
 #define IPIXEL_SLOT_GROUNDOUT 9
-#define IPIXEL_SLOT_LOGO 10
+#define IPIXEL_SLOT_STRIKE 10

@@ -10,8 +10,8 @@ OUTPUT_PATH = PROJECT_ROOT / "include" / "ipixel_scroll_text.h"
 
 # animation 1 = horizontal scroll on 96x16 panels (pypixelcolor send_text)
 SCROLL_TEXTS = {
-    "IPIXEL_SCROLL_WALK": ("WALK", 1),
-    "IPIXEL_SCROLL_STRIKEOUT": ("STRIKEOUT", 1),
+    "IPIXEL_SCROLL_WALK": (" ⚾ ⚾ ⚾ ⚾ WALK", 1),
+    "IPIXEL_SCROLL_STRIKEOUT": (" ⚾ ⚾ ⚾ STRIKEOUT", 1),
 }
 
 

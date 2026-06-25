@@ -27,3 +27,9 @@ size_t renderScoreboardPng(
   uint8_t *out,
   size_t outCapacity
 );
+
+size_t renderBannerPng(
+  const char *text,
+  uint8_t *out,
+  size_t outCapacity
+);

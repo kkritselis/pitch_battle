@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent
 
 
 def main() -> None:
-    for script in ("generatePhoneAssets.py", "embedWebIndex.py"):
+    for script in ("generatePhoneAssets.py", "embedWebIndex.py", "generateLogoGif.py"):
         subprocess.run([sys.executable, str(ROOT / script)], check=True)
 
 

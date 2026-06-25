@@ -57,20 +57,43 @@ static const uint8_t *glyphFor(char c) {
   };
 
   static const uint8_t glyphA[5] = {0b010, 0b101, 0b111, 0b101, 0b101};
-  static const uint8_t glyphB[5] = {0b110, 0b101, 0b110, 0b101, 0b110};
+  static const uint8_t glyphC[5] = {0b111, 0b100, 0b100, 0b100, 0b111};
+  static const uint8_t glyphE[5] = {0b111, 0b100, 0b111, 0b100, 0b111};
+  static const uint8_t glyphG[5] = {0b111, 0b100, 0b101, 0b101, 0b111};
   static const uint8_t glyphH[5] = {0b101, 0b101, 0b111, 0b101, 0b101};
+  static const uint8_t glyphI[5] = {0b111, 0b010, 0b010, 0b010, 0b111};
+  static const uint8_t glyphM[5] = {0b101, 0b111, 0b101, 0b101, 0b101};
+  static const uint8_t glyphN[5] = {0b101, 0b111, 0b111, 0b111, 0b101};
   static const uint8_t glyphO[5] = {0b111, 0b101, 0b101, 0b101, 0b111};
+  static const uint8_t glyphR[5] = {0b111, 0b101, 0b111, 0b110, 0b101};
   static const uint8_t glyphS[5] = {0b111, 0b100, 0b111, 0b001, 0b111};
   static const uint8_t glyphT[5] = {0b111, 0b010, 0b010, 0b010, 0b010};
+  static const uint8_t glyphW[5] = {0b101, 0b101, 0b101, 0b101, 0b111};
+  static const uint8_t glyphY[5] = {0b101, 0b101, 0b111, 0b010, 0b010};
+  static const uint8_t glyphBang[5] = {0b010, 0b010, 0b010, 0b000, 0b010};
+  static const uint8_t glyphB[5] = {0b110, 0b101, 0b110, 0b101, 0b110};
   static const uint8_t glyphDash[5] = {0b000, 0b000, 0b111, 0b000, 0b000};
 
   if (c >= '0' && c <= '9') return digits[c - '0'];
+  if (c >= 'a' && c <= 'z') {
+    c = (char)(c - 'a' + 'A');
+  }
   if (c == 'A') return glyphA;
   if (c == 'B') return glyphB;
+  if (c == 'C') return glyphC;
+  if (c == 'E') return glyphE;
+  if (c == 'G') return glyphG;
   if (c == 'H') return glyphH;
+  if (c == 'I') return glyphI;
+  if (c == 'M') return glyphM;
+  if (c == 'N') return glyphN;
   if (c == 'O') return glyphO;
+  if (c == 'R') return glyphR;
   if (c == 'S') return glyphS;
   if (c == 'T') return glyphT;
+  if (c == 'W') return glyphW;
+  if (c == 'Y') return glyphY;
+  if (c == '!') return glyphBang;
   if (c == '-') return glyphDash;
   return GLYPH_SPACE;
 }
@@ -94,6 +117,30 @@ static void drawChar(uint8_t x, uint8_t y, char c, Rgb color) {
         putPixel(x + col, y + row, color);
       }
     }
+  }
+}
+
+static uint8_t textWidth(const char *text) {
+  uint8_t width = 0;
+  for (const char *cursor = text; *cursor != '\0'; cursor++) {
+    if (*cursor == ' ') {
+      width += 2;
+    } else {
+      width += 4;
+    }
+  }
+  return width;
+}
+
+static void drawText(uint8_t x, uint8_t y, const char *text, Rgb color) {
+  uint8_t cursorX = x;
+  for (const char *cursor = text; *cursor != '\0'; cursor++) {
+    if (*cursor == ' ') {
+      cursorX += 2;
+      continue;
+    }
+    drawChar(cursorX, y, *cursor, color);
+    cursorX += 4;
   }
 }
 
@@ -465,17 +512,7 @@ static size_t buildZlibStoredBlock(
   return pos;
 }
 
-size_t renderScoreboardPng(
-  const ScoreboardState &state,
-  uint8_t *out,
-  size_t outCapacity
-) {
-  if (out == nullptr || outCapacity == 0) {
-    return 0;
-  }
-
-  renderFramebuffer(state);
-
+static size_t encodePixelBufferPng(uint8_t *out, size_t outCapacity) {
   size_t rawPos = 0;
   for (uint8_t y = 0; y < SCOREBOARD_HEIGHT; y++) {
     pngRawBuffer[rawPos++] = 0x00;
@@ -490,7 +527,6 @@ size_t renderScoreboardPng(
   static uint8_t idatBuffer[SCOREBOARD_PNG_MAX_BYTES];
   size_t idatLength =
     buildZlibCompressedBlock(idatBuffer, sizeof(idatBuffer), pngRawBuffer, rawPos);
-  bool compressed = idatLength != 0;
   if (idatLength == 0) {
     idatLength =
       buildZlibStoredBlock(idatBuffer, sizeof(idatBuffer), pngRawBuffer, rawPos);
@@ -523,14 +559,45 @@ size_t renderScoreboardPng(
     return 0;
   }
 
-  Serial.print("Scoreboard PNG: raw=");
-  Serial.print(rawPos);
-  Serial.print(" idat=");
-  Serial.print(idatLength);
-  Serial.print(" png=");
-  Serial.print(pos);
-  Serial.print(" mode=");
-  Serial.println(compressed ? "compressed" : "stored");
-
   return pos;
+}
+
+size_t renderBannerPng(
+  const char *text,
+  uint8_t *out,
+  size_t outCapacity
+) {
+  if (out == nullptr || outCapacity == 0 || text == nullptr) {
+    return 0;
+  }
+
+  memset(pixelBuffer, 0, sizeof(pixelBuffer));
+
+  const uint8_t width = textWidth(text);
+  const uint8_t startX =
+    width >= SCOREBOARD_WIDTH ? 0 : (uint8_t)((SCOREBOARD_WIDTH - width) / 2);
+  drawText(startX, 5, text, COLOR_WHITE);
+
+  return encodePixelBufferPng(out, outCapacity);
+}
+
+size_t renderScoreboardPng(
+  const ScoreboardState &state,
+  uint8_t *out,
+  size_t outCapacity
+) {
+  if (out == nullptr || outCapacity == 0) {
+    return 0;
+  }
+
+  renderFramebuffer(state);
+
+  const size_t pngLength = encodePixelBufferPng(out, outCapacity);
+  if (pngLength == 0) {
+    return 0;
+  }
+
+  Serial.print("Scoreboard PNG bytes=");
+  Serial.println(pngLength);
+  return pngLength;
 }

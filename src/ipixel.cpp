@@ -8,6 +8,7 @@
 #if IPIXEL_USE_STATIC_SCOREBOARD_TEST_PNG
 #include "scoreboard_test_png.h"
 #endif
+#include "ipixel_logo_gif.h"
 #include "ipixel_scroll_text.h"
 
 static const char *IPIXEL_WRITE_UUID = "0000fa02-0000-1000-8000-00805f9b34fb";
@@ -22,6 +23,8 @@ static constexpr size_t IPIXEL_IMAGE_WINDOW_BYTES = 12 * 1024;
 static constexpr size_t IPIXEL_IMAGE_HEADER_BYTES = 13;
 static constexpr size_t IPIXEL_IMAGE_MESSAGE_MAX_BYTES =
   2 + IPIXEL_IMAGE_HEADER_BYTES + SCOREBOARD_PNG_MAX_BYTES;
+// Pre-built BLE frames (logo GIF windows, scroll text) can exceed PNG size.
+static constexpr size_t IPIXEL_RAW_MESSAGE_MAX_BYTES = IPIXEL_IMAGE_WINDOW_BYTES + 512;
 
 static NimBLEClient *ipixelClient = nullptr;
 static NimBLERemoteCharacteristic *ipixelWriteChar = nullptr;
@@ -29,6 +32,7 @@ static std::string ipixelTargetAddress;
 static bool ipixelHaveTargetAddress = false;
 static bool ipixelReady = false;
 static bool ipixelLogoShown = false;
+static bool ipixelAttractActive = false;
 static bool ipixelScanning = false;
 static bool ipixelWifiActive = false;
 static uint32_t ipixelNextAttemptMs = 0;
@@ -557,7 +561,7 @@ static bool ipixelSendRawMessage(const uint8_t *message, size_t messageLength) {
     return false;
   }
 
-  if (messageLength > IPIXEL_IMAGE_MESSAGE_MAX_BYTES) {
+  if (messageLength > IPIXEL_RAW_MESSAGE_MAX_BYTES) {
     Serial.println("iPixel raw message too large");
     return false;
   }
@@ -841,6 +845,104 @@ static bool ipixelPushScoreboardImage() {
   return sent;
 }
 
+static bool ipixelPushBannerImage(const char *text) {
+  if (text == nullptr || text[0] == '\0') {
+    Serial.println("iPixel banner skipped (empty text)");
+    return false;
+  }
+
+  const size_t pngLength = renderBannerPng(
+    text,
+    ipixelScoreboardPng,
+    sizeof(ipixelScoreboardPng)
+  );
+  if (pngLength == 0) {
+    Serial.println("iPixel banner render failed");
+    return false;
+  }
+
+  if (ipixelWifiActive) {
+    esp_coex_preference_set(ESP_COEX_PREFER_BT);
+    Serial.println("iPixel coex prefer BT for banner");
+  }
+
+  Serial.print("iPixel banner text=");
+  Serial.println(text);
+  if (!ipixelSendDeviceInfo()) {
+    Serial.println("iPixel banner handshake failed");
+  }
+  delay(300);
+
+  const uint8_t bannerSlot = IPIXEL_SLOT_SCOREBOARD;
+  bool sent = ipixelSendImageBytes(ipixelScoreboardPng, pngLength, bannerSlot);
+  if (sent) {
+    delay(300);
+    if (!ipixelSendSlotCommand(bannerSlot)) {
+      Serial.println("iPixel banner show_slot failed");
+      sent = false;
+    }
+  } else {
+    Serial.println("iPixel banner image push failed");
+  }
+
+  if (ipixelWifiActive) {
+    esp_coex_preference_set(ESP_COEX_PREFER_BALANCE);
+    Serial.println("iPixel coex restored balance");
+  }
+
+  return sent;
+}
+
+static bool ipixelPushDirectGifWindows(
+  const IpixelLogoGifWindow *windows,
+  size_t windowCount
+) {
+  if (!ipixelIsConnected() || windows == nullptr || windowCount == 0) {
+    return false;
+  }
+
+  if (ipixelWifiActive) {
+    esp_coex_preference_set(ESP_COEX_PREFER_BT);
+    Serial.println("iPixel coex prefer BT for direct GIF");
+  }
+
+  if (!ipixelSendDeviceInfo()) {
+    Serial.println("iPixel direct GIF handshake failed");
+  }
+  delay(300);
+
+  bool sent = true;
+  for (size_t i = 0; i < windowCount; i++) {
+    Serial.print("iPixel direct GIF window ");
+    Serial.print(i);
+    Serial.print("/");
+    Serial.print(windowCount - 1);
+    Serial.print(" bytes=");
+    Serial.println(windows[i].length);
+
+    if (!ipixelSendRawMessage(windows[i].data, windows[i].length)) {
+      Serial.println("iPixel direct GIF window send failed");
+      sent = false;
+      break;
+    }
+    delay(120);
+  }
+
+  if (ipixelWifiActive) {
+    esp_coex_preference_set(ESP_COEX_PREFER_BALANCE);
+    Serial.println("iPixel coex restored balance");
+  }
+
+  return sent;
+}
+
+static bool ipixelPushLogoGif() {
+  return ipixelPushDirectGifWindows(
+    IPIXEL_LOGO_GIF_WINDOWS,
+    IPIXEL_LOGO_GIF_WINDOW_COUNT
+  );
+}
+
 static bool ipixelFinishConnection() {
   ipixelDumpGatt(ipixelClient);
 
@@ -915,22 +1017,14 @@ static bool ipixelShowLogoOnce() {
 
   Serial.println("iPixel running boot sequence");
 
-  if (!ipixelSendDeviceInfo()) {
-    Serial.println("iPixel device info handshake failed");
+  if (!ipixelPushLogoGif()) {
+    Serial.println("iPixel direct logo push failed");
     return false;
   }
 
-  delay(300);
-
-  if (!ipixelShowSlot(IPIXEL_SLOT_LOGO)) {
-    Serial.println("iPixel logo slot failed");
-    return false;
-  }
-
-  delay(300);
-
-  Serial.println("iPixel logo slot sent");
+  Serial.println("iPixel direct logo GIF sent");
   ipixelLogoShown = true;
+  ipixelAttractActive = true;
   return true;
 }
 
@@ -1159,11 +1253,11 @@ static uint8_t ipixelSlotForImage(const String &imageName) {
   if (imageName == "double") return IPIXEL_SLOT_DOUBLE;
   if (imageName == "single") return IPIXEL_SLOT_SINGLE;
   if (imageName == "ball") return IPIXEL_SLOT_BALL;
-  if (imageName == "strike") return IPIXEL_SLOT_BALL;
+  if (imageName == "strike") return IPIXEL_SLOT_STRIKE;
   if (imageName == "foul") return IPIXEL_SLOT_FOUL;
   if (imageName == "flyout" || imageName == "out") return IPIXEL_SLOT_FLYOUT;
   if (imageName == "groundout") return IPIXEL_SLOT_GROUNDOUT;
-  return IPIXEL_SLOT_LOGO;
+  return IPIXEL_SLOT_SINGLE;
 }
 
 static void ipixelStartTextBurst(
@@ -1292,6 +1386,43 @@ void showIPixelResult(const String &imageName, const ScoreboardState &state) {
   Serial.println(slot);
 
   ipixelStartSlotBurst(slot, imageName, true);
+}
+
+bool showIPixelBanner(const char *text) {
+  if (!ipixelIsConnected()) {
+    Serial.println("iPixel banner skipped (not connected)");
+    return false;
+  }
+
+  return ipixelPushBannerImage(text);
+}
+
+bool showIPixelAttractLogo() {
+  if (!ipixelIsConnected()) {
+    Serial.println("iPixel attract logo skipped (not connected)");
+    return false;
+  }
+
+  if (!ipixelPushLogoGif()) {
+    return false;
+  }
+
+  ipixelLogoShown = true;
+  ipixelAttractActive = true;
+  return true;
+}
+
+void ipixelNotifyFirstPlayResolved() {
+  if (!ipixelAttractActive) {
+    return;
+  }
+
+  ipixelAttractActive = false;
+  Serial.println("iPixel attract logo ended (first play resolved)");
+}
+
+bool ipixelAttractModeActive() {
+  return ipixelAttractActive;
 }
 
 #endif

@@ -9,6 +9,17 @@
 #include "pitch_outcomes.h"
 #include "web_index.h"
 
+enum GameOverPhase : uint8_t {
+  GAME_OVER_IDLE = 0,
+  GAME_OVER_MESSAGE_1,
+  GAME_OVER_MESSAGE_1_WAIT,
+  GAME_OVER_MESSAGE_2,
+  GAME_OVER_MESSAGE_2_WAIT,
+  GAME_OVER_FINISH,
+};
+
+constexpr uint32_t GAME_OVER_MESSAGE_MS = 6000;
+
 #if ENABLE_LCD
   #include <Arduino_GFX_Library.h>
 
@@ -48,6 +59,12 @@ String currentImage = "waiting";
 String pendingIPixelImage = "";
 bool pendingIPixelResult = false;
 bool pendingIPixelScoreboard = false;
+bool gameOverPending = false;
+bool gameOverActive = false;
+bool displayGameStarted = false;
+GameOverPhase gameOverPhase = GAME_OVER_IDLE;
+uint32_t gameOverDueMs = 0;
+char gameOverMessage[40] = "";
 uint32_t lastDiagnosticSlotMs = 0;
 uint8_t diagnosticSlotIndex = 0;
 uint16_t diagnosticHandle = IPIXEL_DIAG_HANDLE_START;
@@ -55,7 +72,7 @@ const uint8_t DIAGNOSTIC_SLOTS[] = {
   IPIXEL_SLOT_HOMERUN,
   IPIXEL_SLOT_SINGLE,
   IPIXEL_SLOT_FOUL,
-  IPIXEL_SLOT_LOGO
+  IPIXEL_SLOT_STRIKE
 };
 
 // Outcome lookup lives in pitch_outcomes.h / pitch_outcomes.cpp.
@@ -172,10 +189,17 @@ void advanceHalfInning() {
 
   if (gameState.topHalf) {
     gameState.topHalf = false;
-  } else {
-    gameState.topHalf = true;
-    gameState.inning++;
+    return;
   }
+
+  if (gameState.inning >= GAME_INNINGS) {
+    gameOverPending = true;
+    Serial.println("Game over: bottom of final inning complete");
+    return;
+  }
+
+  gameState.topHalf = true;
+  gameState.inning++;
 }
 
 void addOut() {
@@ -273,6 +297,127 @@ void resetGameState() {
   gameState = GameState();
 }
 
+bool gameplayBlocked() {
+  return gameOverPending || gameOverActive;
+}
+
+void buildGameOverMessage(char *out, size_t outCapacity) {
+  const uint8_t homeScore = gameState.homeScore;
+  const uint8_t awayScore = gameState.awayScore;
+
+  if (homeScore > awayScore) {
+    snprintf(
+      out,
+      outCapacity,
+      "HOME WINS %u TO %u!",
+      homeScore,
+      awayScore
+    );
+  } else if (awayScore > homeScore) {
+    snprintf(
+      out,
+      outCapacity,
+      "AWAY WINS %u TO %u!",
+      awayScore,
+      homeScore
+    );
+  } else {
+    snprintf(
+      out,
+      outCapacity,
+      "TIE GAME %u TO %u!",
+      homeScore,
+      awayScore
+    );
+  }
+}
+
+void finalizeGameOver() {
+  Serial.println("Game over: resetting game and clearing players");
+
+  pitchLocked = false;
+  swingLocked = false;
+  pitchValue = "";
+  swingValue = "";
+  resultText = "";
+  currentImage = "waiting";
+  pendingIPixelImage = "";
+  pendingIPixelResult = false;
+  pendingIPixelScoreboard = false;
+  homeToken = "";
+  awayToken = "";
+  resetGameState();
+  displayGameStarted = false;
+
+  WiFi.softAPdisconnect(true);
+
+  showIPixelAttractLogo();
+}
+
+void beginGameOver() {
+  if (gameOverActive) {
+    return;
+  }
+
+  gameOverPending = false;
+  gameOverActive = true;
+  gameOverPhase = GAME_OVER_MESSAGE_1;
+  gameOverDueMs = 0;
+  buildGameOverMessage(gameOverMessage, sizeof(gameOverMessage));
+  resultText = gameOverMessage;
+
+  Serial.print("Game over sequence starting: ");
+  Serial.println(gameOverMessage);
+}
+
+void processGameOver() {
+  if (!gameOverActive || ipixelBusy()) {
+    return;
+  }
+
+  if (gameOverPhase != GAME_OVER_MESSAGE_1 &&
+      gameOverPhase != GAME_OVER_MESSAGE_2 &&
+      gameOverPhase != GAME_OVER_FINISH &&
+      millis() < gameOverDueMs) {
+    return;
+  }
+
+  switch (gameOverPhase) {
+    case GAME_OVER_MESSAGE_1:
+      showIPixelBanner(gameOverMessage);
+      gameOverPhase = GAME_OVER_MESSAGE_1_WAIT;
+      gameOverDueMs = millis() + GAME_OVER_MESSAGE_MS;
+      break;
+
+    case GAME_OVER_MESSAGE_1_WAIT:
+      gameOverPhase = GAME_OVER_MESSAGE_2;
+      gameOverDueMs = 0;
+      break;
+
+    case GAME_OVER_MESSAGE_2:
+      showIPixelBanner(gameOverMessage);
+      gameOverPhase = GAME_OVER_MESSAGE_2_WAIT;
+      gameOverDueMs = millis() + GAME_OVER_MESSAGE_MS;
+      break;
+
+    case GAME_OVER_MESSAGE_2_WAIT:
+      gameOverPhase = GAME_OVER_FINISH;
+      gameOverDueMs = 0;
+      break;
+
+    case GAME_OVER_FINISH:
+      finalizeGameOver();
+      gameOverActive = false;
+      gameOverPhase = GAME_OVER_IDLE;
+      gameOverDueMs = 0;
+      gameOverMessage[0] = '\0';
+      break;
+
+    default:
+      break;
+  }
+}
+
 void checkResolve();
 String getStateJson();
 PlayResult resolvePlay(String pitch, String swing);
@@ -282,6 +427,12 @@ String pitchingTeam();
 String battingTeam();
 
 void handlePitch() {
+  if (gameplayBlocked()) {
+    server.send(403, "application/json",
+      "{\"error\":\"Game is over. Tap Next Pitch to finish.\"}");
+    return;
+  }
+
   String body = server.arg("plain");
   if (teamForToken(jsonStringValue(body, "token")) != pitchingTeam()) {
     server.send(403, "application/json",
@@ -301,6 +452,12 @@ void handlePitch() {
 }
 
 void handleSwing() {
+  if (gameplayBlocked()) {
+    server.send(403, "application/json",
+      "{\"error\":\"Game is over. Tap Next Pitch to finish.\"}");
+    return;
+  }
+
   String body = server.arg("plain");
   if (teamForToken(jsonStringValue(body, "token")) != battingTeam()) {
     server.send(403, "application/json",
@@ -340,6 +497,11 @@ void checkResolve() {
     pendingIPixelImage = currentImage;
     pendingIPixelResult = true;
 
+    if (!displayGameStarted) {
+      displayGameStarted = true;
+      ipixelNotifyFirstPlayResolved();
+    }
+
     Serial.println(resultText);
   }
 }
@@ -350,6 +512,9 @@ String getStateJson() {
   json += "\"swingLocked\":" + String(swingLocked ? "true" : "false") + ",";
   json += "\"result\":\"" + resultText + "\",";
   json += "\"image\":\"" + currentImage + "\",";
+  json += "\"gameOverPending\":" + String(gameOverPending ? "true" : "false") + ",";
+  json += "\"gameOverActive\":" + String(gameOverActive ? "true" : "false") + ",";
+  json += "\"gameOverMessage\":\"" + String(gameOverMessage) + "\",";
   json += "\"inning\":" + String(gameState.inning) + ",";
   json += "\"half\":\"" + String(gameState.topHalf ? "top" : "bottom") + "\",";
   json += "\"homeScore\":" + String(gameState.homeScore) + ",";
@@ -385,6 +550,17 @@ PlayResult resolvePlay(String pitch, String swing) {
 }
 
 void handleReset() {
+  if (gameOverPending) {
+    beginGameOver();
+    server.send(200, "application/json", getStateJson());
+    return;
+  }
+
+  if (gameOverActive) {
+    server.send(200, "application/json", getStateJson());
+    return;
+  }
+
   pitchLocked = false;
   swingLocked = false;
   pitchValue = "";
@@ -407,6 +583,7 @@ void handleNewGame() {
   pendingIPixelImage = "";
   pendingIPixelResult = false;
   pendingIPixelScoreboard = true;
+  displayGameStarted = false;
   resetGameState();
 
   server.send(200, "application/json", getStateJson());
@@ -446,6 +623,12 @@ String battingTeam() {
 }
 
 void handleJoin() {
+  if (gameOverActive) {
+    server.send(403, "application/json",
+      "{\"team\":\"full\",\"error\":\"Game is resetting. Reconnect shortly.\"}");
+    return;
+  }
+
   String token = jsonStringValue(server.arg("plain"), "token");
 
   String team;
@@ -675,6 +858,7 @@ void loop() {
   lcdScreenLoop();
   processPendingIPixelResult();
   processPendingIPixelScoreboard();
+  processGameOver();
 
 #if IPIXEL_DIAGNOSTIC_MODE == 2
   runIPixelDiagnosticCycle();

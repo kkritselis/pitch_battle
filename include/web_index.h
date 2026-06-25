@@ -5,7 +5,7 @@
 // src/index.html embedded for the phone web UI.
 // Regenerate with: python3 setup/embedWebIndex.py
 
-constexpr size_t WEB_INDEX_HTML_BYTES = 25346;
+constexpr size_t WEB_INDEX_HTML_BYTES = 25831;
 const char WEB_INDEX_HTML[] PROGMEM = R"WEBINDEX(
 <!doctype html>
 <html>
@@ -704,13 +704,27 @@ function renderState(state) {
   const button = document.getElementById("button");
   const buttonLabel = document.getElementById("button-label");
 
+  if (state.gameOverActive) {
+    showingResult = true;
+    hitterPanel.classList.add("hidden");
+    pitcherPanel.classList.add("hidden");
+    resultPanel.classList.remove("hidden");
+    document.getElementById("result-text").textContent =
+      state.gameOverMessage || state.result || "Game over";
+    buttonLabel.textContent = "Resetting...";
+    button.disabled = true;
+    refreshChoiceButtons(true);
+    scheduleLayoutApp();
+    return;
+  }
+
   if (hasResult) {
     showingResult = true;
     hitterPanel.classList.add("hidden");
     pitcherPanel.classList.add("hidden");
     resultPanel.classList.remove("hidden");
     document.getElementById("result-text").textContent = state.result;
-    buttonLabel.textContent = "Next Pitch";
+    buttonLabel.textContent = state.gameOverPending ? "End Game" : "Next Pitch";
     button.disabled = false;
     refreshChoiceButtons(true);
   } else {

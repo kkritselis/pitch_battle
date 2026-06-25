@@ -18,7 +18,7 @@ This repo is a **rebuild** of an earlier Mac-based prototype.
 | Round LCD         | Not part of prototype        | GC9A01 animated attract loop (`esp_screen.gif`)                 |
 | Game logic        | Node                         | Weighted outcome lookup + count-based walks/strikeouts          |
 | iPixel display    | Node BLE client (working)    | ESP32 BLE client with live scoreboard                           |
-| Animation uploads | Done via Mac tooling         | GIF slots via `setup/storeImages.py`; scoreboard live on slot 5 |
+| Animation uploads | Done via Mac tooling         | GIF slots 1–4, 6–10 via `storeImages.py`; logo pushed directly; scoreboard live on slot 5 |
 
 The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE control. This repo moves that stack onto the ESP32 so the game can run standalone.
 
@@ -32,7 +32,7 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 - [x] Scan for and connect to the iPixel on boot
 - [x] Discover the FA02 write characteristic
 - [x] Implement `showIPixelResult()` using the slot display command
-- [x] Show slot 10 (logo) at startup
+- [x] Show logo on the iPixel at startup (originally slot 10; later moved to direct push — see below)
 
 **Outcome:** Logo appears on the iPixel automatically after ESP32 boot, with no Mac involved.
 
@@ -61,7 +61,7 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 - `pypixelcolor` sends through Bleak with `response=True`. On ESP32/NimBLE, write-with-response works when sent directly to raw handle `0x0006`; the UUID-derived handle `0x0009` fails.
 - Result commands are loop-driven and non-blocking. During each result burst, the firmware temporarily prefers BLE coexistence and restores balance after the burst.
 - If the requested slot is empty, the device falls back to cycling through populated slots.
-- Diagnostic mode 1 confirmed slots 1, 4, 7, and 10 switch correctly with `IPIXEL_RAW_WRITE_HANDLE 0x0006`.
+- Diagnostic mode 1 confirmed slots 1, 4, 7, and 10 switch correctly with `IPIXEL_RAW_WRITE_HANDLE 0x0006` (slot 10 is now strike, not logo).
 - Do not call blocking BLE reads/writes from the web-server request handler task; a diagnostic `readValue()` there caused a load-access-fault crash.
 
 ### Phase 3 — Scoreboard state
@@ -167,6 +167,38 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 
 **Regression fixed:** Early scorebox template edits wiped left-side rows, causing a strikes gap, clipped outs, and distorted base diamond. The fix merged the original left-side pixels with scorebox-only right-side changes.
 
+### Outcome balance (extra balls and strikes)
+
+- [x] `setup/generateOutcomes.py` injects **10% strike** and **5% ball** into each hit/out combo
+- [x] Existing play weights in each combo scaled to 85% so totals remain 100
+- [x] Combos that were already 100% strike/ball (miss scenarios) left unchanged
+
+**Outcome:** Playtesting showed too many hits and outs relative to balls and strikes. Every pitch/swing pair now has a baseline chance of a called strike or ball before the weighted hit/out table is consulted.
+
+### Three-inning game and end-of-game sequence
+
+- [x] `GAME_INNINGS 3` in `include/config.h`
+- [x] Game ends after the bottom of the 3rd — no advance to a 4th inning
+- [x] `gameOverPending` / `gameOverActive` / `gameOverMessage` exposed in `/api/state`
+- [x] Final play shows result; phone button reads **End Game**
+- [x] Wrap-up: score banner on iPixel twice → reset state → clear tokens → `WiFi.softAPdisconnect(true)` → logo attract pushed again
+- [x] Phone UI shows game-over message during reset
+
+**Outcome:** A full three-inning session can be played start to finish with a defined ending. Players must reconnect to Wi-Fi to start a new game.
+
+### Logo direct push and strike slot 10
+
+- [x] **`strike.gif` on slot 10** — uploaded via `setup/storeImages.py`; firmware maps `"strike"` → `IPIXEL_SLOT_STRIKE`
+- [x] **Logo removed from slot 10** — no longer uploaded or referenced as a stored slot
+- [x] **`setup/generateLogoGif.py`** → `include/ipixel_logo_gif.h` — pre-built BLE windows from `setup/logo.gif` (~13 KB, two frames)
+- [x] Logo pushed directly (`save_slot=0`) on boot and after game over; loops until the first at-bat of a session resolves
+- [x] Attract ends when both players lock their first pitch/swing (`ipixelNotifyFirstPlayResolved()`)
+- [x] **`IPIXEL_RAW_MESSAGE_MAX_BYTES`** — logo windows (~12 KB) exceeded the scoreboard PNG send limit (~6 KB); raw BLE frames now use a separate size cap
+
+**Outcome:** Strike plays the correct animation (not the ball GIF or scroll text). Logo no longer competes with strike for slot 10. The logo GIF ships in firmware and does not require a Mac upload after each flash.
+
+**Bug fixed:** First logo push failed with `iPixel raw message too large` because `ipixelSendRawMessage()` reused the PNG buffer limit. Logo window 0 is 12,303 bytes; chunk sending already worked — only the size check needed updating.
+
 ---
 
 ## End goal (achieved)
@@ -174,18 +206,21 @@ The Mac prototype proved out multiplayer flow, play resolution, and iPixel BLE c
 The standalone game loop works end to end:
 
 1. ESP32 powers on
-2. Logo appears on the iPixel
+2. Logo GIF pushed directly on the iPixel (loops until first at-bat)
 3. Animated attract loop plays on the round LCD
 4. Players connect to Wi-Fi and tap Join Game (Home then Away)
 5. The pitching and batting teams lock their choices for the half
-6. ESP32 resolves the play via the weighted outcome lookup
+6. ESP32 resolves the play via the weighted outcome lookup (with injected ball/strike chances)
 7. iPixel shows the result animation or scroll text (walk/strikeout)
 8. Scoreboard updates on slot 5
-9. Phones show the result and Next Pitch; play continues through full innings
+9. Play continues through three innings
+10. After the bottom of the 3rd, **End Game** triggers the wrap-up banner, reset, and logo attract
 
 No laptop, cloud service, or external server required during gameplay.
 
 **Still open:** New Game button in the phone UI, player reconnection timeout, JSON escaping for `resultText`, and advanced situational rules (double plays, etc.). See [README.md](README.md) roadmap.
+
+---
 
 ## iPixel diagnostic history
 
@@ -193,7 +228,7 @@ Normal gameplay uses `IPIXEL_DIAGNOSTIC_MODE 0`, `IPIXEL_WRITE_WITH_RESPONSE 1`,
 
 When BLE commands queue successfully but the display ignores them, this was the test order used during bring-up:
 
-1. Set `IPIXEL_DIAGNOSTIC_MODE` to `1` and flash. Wi-Fi is disabled; firmware cycles slots 1, 4, 7, and 10 from `loop()`.
+1. Set `IPIXEL_DIAGNOSTIC_MODE` to `1` and flash. Wi-Fi is disabled; firmware cycles slots 1, 4, 7, and 10 (strike) from `loop()`.
 2. If mode 1 logs `rc=0` but the display ignores slots, set `IPIXEL_USE_AE_CHANNEL` to `1` and retest (switches from `fa02`/`fa03` to `ae01`/`ae02`).
 3. If the channel switch still fails, compare `IPIXEL_WRITE_WITH_RESPONSE` `0` vs `1` in mode 1.
 4. Set `IPIXEL_REQUIRE_SLOT_ACK` to `1` in mode 1. A timeout means the display is not accepting that channel/write mode.

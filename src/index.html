@@ -695,13 +695,27 @@ function renderState(state) {
   const button = document.getElementById("button");
   const buttonLabel = document.getElementById("button-label");
 
+  if (state.gameOverActive) {
+    showingResult = true;
+    hitterPanel.classList.add("hidden");
+    pitcherPanel.classList.add("hidden");
+    resultPanel.classList.remove("hidden");
+    document.getElementById("result-text").textContent =
+      state.gameOverMessage || state.result || "Game over";
+    buttonLabel.textContent = "Resetting...";
+    button.disabled = true;
+    refreshChoiceButtons(true);
+    scheduleLayoutApp();
+    return;
+  }
+
   if (hasResult) {
     showingResult = true;
     hitterPanel.classList.add("hidden");
     pitcherPanel.classList.add("hidden");
     resultPanel.classList.remove("hidden");
     document.getElementById("result-text").textContent = state.result;
-    buttonLabel.textContent = "Next Pitch";
+    buttonLabel.textContent = state.gameOverPending ? "End Game" : "Next Pitch";
     button.disabled = false;
     refreshChoiceButtons(true);
   } else {
