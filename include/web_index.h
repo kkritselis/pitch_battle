@@ -5,7 +5,7 @@
 // src/index.html embedded for the phone web UI.
 // Regenerate with: python3 setup/embedWebIndex.py
 
-constexpr size_t WEB_INDEX_HTML_BYTES = 25831;
+constexpr size_t WEB_INDEX_HTML_BYTES = 26162;
 const char WEB_INDEX_HTML[] PROGMEM = R"WEBINDEX(
 <!doctype html>
 <html>
@@ -143,8 +143,15 @@ const char WEB_INDEX_HTML[] PROGMEM = R"WEBINDEX(
             height: 60px;
             visibility: hidden;
             opacity: 0;
-            background-color: #b71e23;
             clip-path: polygon(38% 13%, 48% 23%, 39% 37%, 37% 56%, 38% 100%, 50% 70%, 61% 100%, 67% 57%, 67% 30%, 62% 20%, 58% 2%, 44% 2%);
+        }
+
+        #field.away-batting span.occupied {
+            background-color: #2388ff;
+        }
+
+        #field.home-batting span.occupied {
+            background-color: #b71e23;
         }
 
         #field span.occupied {
@@ -693,6 +700,10 @@ function renderState(state) {
   setBaseOccupied("field-first", state.runnerFirst);
   setBaseOccupied("field-second", state.runnerSecond);
   setBaseOccupied("field-third", state.runnerThird);
+
+  const field = document.getElementById("field");
+  field.classList.toggle("away-batting", state.half === "top");
+  field.classList.toggle("home-batting", state.half === "bottom");
 
   updatePvpPanel();
   document.getElementById("pvp-right-bottom").textContent =

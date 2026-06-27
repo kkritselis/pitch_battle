@@ -2,7 +2,7 @@
 
 This document records how the project evolved from the Mac prototype to the current ESP32 firmware, including completed milestones and technical findings from bring-up.
 
-For how to build, run, and use the game today, see [README.md](README.md).
+For a quick overview, see [README.md](README.md). For API, hardware, and developer reference, see [details.md](details.md).
 
 ---
 
@@ -218,7 +218,7 @@ The standalone game loop works end to end:
 
 No laptop, cloud service, or external server required during gameplay.
 
-**Still open:** New Game button in the phone UI, player reconnection timeout, JSON escaping for `resultText`, and advanced situational rules (double plays, etc.). See [README.md](README.md) roadmap.
+**Still open (optional v2 ideas):** See [details.md](details.md) — possible future improvements.
 
 ---
 

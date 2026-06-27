@@ -2,386 +2,86 @@
 
 # Pitch Battle
 
-Pitch Battle is a self-contained tabletop baseball game. Players connect their phones to a local Wi-Fi network, choose pitch and swing options, and the host resolves each at-bat. Results appear on the phones and on an external iPixel LED display.
+Pitch Battle is a self-contained tabletop baseball game. Two phones connect to an ESP32 over local Wi-Fi, pick pitch and swing options in secret, and the host resolves each at-bat. Results show on the phones and on an iPixel LED scoreboard — no laptop, internet, or cloud service required during play.
 
-The game needs no laptop, internet connection, or cloud services during play.
-
-See [project_history.md](project_history.md) for how the Mac prototype was ported to ESP32 and what was completed along the way.
+MIT licensed. See [LICENSE](LICENSE).
 
 ---
 
-## Current State
+## How it works
 
-### Working
+1. Power on the ESP32 and iPixel display.
+2. Two players join Wi-Fi **PitchBattle** on their phones (first join = Home, second = Away).
+3. Each half-inning, one player pitches and the other bats. Both choose **height** and **speed/timing**, then lock in.
+4. The ESP32 resolves the play, updates the scoreboard, and plays an animation on the iPixel.
+5. Tap **Next Pitch** and keep playing through **3 innings**.
+6. After the final out, tap **End Game** for the score banner and a fresh attract screen.
 
-- **Wi-Fi access point** — SSID `PitchBattle`, password `pitchbattle`
-- **Captive portal** — DNS redirect plus probe routes for Android and iOS
-- **Round LCD** — Full-screen animated `esp_screen.gif` on boot (GC9A01, 240×240)
-- **Phone web UI** — JPG slice design (`src/index.html`); join screen, live scoreboard, pitch/swing controls, result panel
-- **Web assets in firmware** — JPG backgrounds and HTML embedded via `setup/generateWebAssets.py` (runs before each build)
-- **Team assignment** — First phone = Home, second = Away; roles follow the inning half
-- **Server-side role enforcement** — Only the pitching team can pitch; only the batting team can swing
-- **REST API** — Join, pitch, swing, state, reset, and new-game endpoints
-- **At-bat resolution** — Weighted outcome lookup from `setup/pitching-battle-outcomes.json`; each combo also rolls 10% strike and 5% ball
-- **Game length** — Three innings (`GAME_INNINGS` in `config.h`); game ends after the bottom of the 3rd
-- **Game over flow** — Final result, then **End Game**; iPixel shows score banner twice, resets state, disconnects phones, returns to logo attract
-- **Game state** — Inning, score, count, outs, and base runners persist across at-bats
-- **Walks and strikeouts** — Four balls advances the batter; three strikes records an out
-- **iPixel display** — Logo GIF pushed directly from firmware (not stored in a slot); loops until the first at-bat resolves; GIF slots for results; scroll text for walk/strikeout; live scoreboard on slot 5
-- **Live scoreboard** — 96×16 template with visit/home rows, count colors, base runners, and on-device PNG push
-- **Next-pitch flow** — Result screen + **Next Pitch** button calls `/api/reset`
-
-### Known rough edges
-
-- `platformio.ini` includes machine-specific serial ports; change for your setup
-- iPixel commands use raw ATT handle `0x0006` on this unit
-- iPixel notify ACKs never arrive on the ESP32 link; firmware treats a fully-written window as success
-- On-device PNG compression uses a fixed-Huffman DEFLATE encoder in `src/scoreboard.cpp` (ROM miniz cannot allocate on ESP32-C3)
-- **New Game** is not yet exposed in the phone UI (API exists at `/api/new-game`; game-over reset runs automatically)
+Top of the inning: Home pitches, Away bats. Bottom: roles swap. Base runners on the phone and iPixel scoreboard are **blue** when Away is batting and **red** when Home is batting.
 
 ---
 
 ## Hardware
 
-### ESP32-C3 DevKitM-1
+| Part | Role |
+| ---- | ---- |
+| **ESP32-C3 DevKitM-1** | Wi-Fi host, game engine, web UI, round LCD |
+| **Round LCD** (onboard GC9A01) | Attract animation on the dev kit |
+| **iPixel** 96×16 LED matrix (BLE) | Animations, scroll text, live scoreboard |
+| **2 phones** | One per team |
 
-Hosts Wi-Fi, web server, game engine, iPixel BLE client, and the round LCD attract screen.
-
-### Round LCD (onboard)
-
-1.28 inch 240x240 round IPS TFT, GC9A01 driver. Pin mapping in `include/config.h`. Set `ENABLE_LCD` to `0` to test the web server without the display.
-
-### iPixel display (external)
-
-96x16 flexible LED matrix over BLE. GIF slots persist across power cycles. Slot 5 is overwritten each turn with the live scoreboard PNG. Upload GIF assets with `setup/storeImages.py`.
-
-### Phones
-
-1. Connect to Wi-Fi `PitchBattle` (password `pitchbattle`)
-2. Open the captive portal or go to `http://192.168.4.1`
-3. Tap Join Game — first phone is Home, second is Away
+You need to upload GIF assets to the iPixel once from a Mac (see [details.md](details.md)). The logo animation is embedded in the ESP32 firmware and pushed directly at boot.
 
 ---
 
-## Architecture
+## Install and run
 
-```text
-  Phone (Home team)            Phone (Away team)
-         |                            |
-         +------------+---------------+
-                      |
-                      v
-              ESP32-C3 firmware
-         +-------------------------+
-         |  Wi-Fi AP + portal      |
-         |  Web server + UI        |
-         |  Game engine            |
-         |  Round LCD (esp_screen.gif) |
-         |  BLE client (iPixel)    |
-         +-------------------------+
-                      |
-                      v
-              iPixel LED display
-         (logo direct push, GIF slots,
-          scroll text, live scoreboard)
-```
+### Requirements
 
----
+- [PlatformIO](https://platformio.org/)
+- USB cable to the ESP32-C3
+- Python 3 (for one-time iPixel GIF upload and optional asset edits)
 
-## Build and Run
-
-Requires [PlatformIO](https://platformio.org/).
+### Flash the ESP32
 
 ```bash
+git clone <your-repo-url>
 cd pitch_battle
-pio run -t upload
-pio device monitor
 ```
 
-Serial monitor runs at 115200 baud.
-
-After flashing:
-
-1. Connect your phone to Wi-Fi network `PitchBattle`
-2. Password: `pitchbattle`
-3. The captive portal should open automatically; if not, go to `http://192.168.4.1`
-
----
-
-## API
-
-| Method | Path            | Description                           |
-| ------ | --------------- | ------------------------------------- |
-| `GET`  | `/`             | Game web UI                           |
-| `GET`  | `/phone_*.jpg`  | Phone UI background slices (embedded) |
-| `POST` | `/api/join`     | Claim a team (Home first, then Away)  |
-| `GET`  | `/api/state`    | Current game state (JSON)             |
-| `POST` | `/api/pitch`    | Lock pitch selection (pitching team)  |
-| `POST` | `/api/swing`    | Lock swing selection (batting team) |
-| `POST` | `/api/reset`    | Reset locks and start a new at-bat  |
-| `POST` | `/api/new-game` | Reset the full scoreboard/game state |
-
-### Teams and roles
-
-Each phone posts a random `token` (stored in `localStorage`) to `/api/join`. First token claims **Home**, second claims **Away**; further phones get `{"team":"full"}`. A reload reclaims the same team via the saved token.
-
-| Half   | Home  | Away  |
-| ------ | ----- | ----- |
-| Top    | Pitch | Bat   |
-| Bottom | Bat   | Pitch |
-
-Wrong-team requests return `403` with `{"error":"..."}`.
-
-### Request bodies
-
-Join:
-
-```json
-{ "token": "p-ab12cd34" }
-```
-
-Pitch:
-
-```json
-{ "height": "high", "speed": "fast", "token": "p-ab12cd34" }
-```
-
-Swing:
-
-```json
-{ "height": "middle", "timing": "medium", "token": "p-ab12cd34" }
-```
-
-`height`: `high`, `middle`, `low`  
-Pitch `speed`: `fast`, `medium`, `slow`  
-Swing `timing`: `fast`, `medium`, `slow`
-
-### State response
-
-```json
-{
-  "pitchLocked": true,
-  "swingLocked": false,
-  "result": "",
-  "image": "waiting",
-  "inning": 1,
-  "half": "top",
-  "homeScore": 0,
-  "awayScore": 0,
-  "balls": 0,
-  "strikes": 0,
-  "outs": 0,
-  "runnerFirst": false,
-  "runnerSecond": false,
-  "runnerThird": false,
-  "gameOverPending": false,
-  "gameOverActive": false,
-  "gameOverMessage": ""
-}
-```
-
-When both players lock, `result` holds the outcome text and `image` selects the iPixel display:
-
-| `image` value | iPixel behavior |
-| ------------- | --------------- |
-| `homerun`, `triple`, `double`, `single` | Stored GIF slot |
-| `ball`, `strike` | Ball animation (slot 6), strike animation (slot 10) |
-| `foul` | Foul animation (slot 7) |
-| `flyout`, `groundout`, `out` | Flyout (slot 8) or ground out (slot 9) |
-| `walk` | Scrolling text `"WALK"` |
-| `strikeout` | Scrolling text `"STRIKEOUT"` |
-| `waiting` | No result yet |
-
-Scoreboard fields persist until `/api/new-game`. After the bottom of the 3rd inning, `gameOverPending` becomes `true`; tap **End Game** (the Next Pitch button on the final play) to start the wrap-up sequence.
-
-### Game length and end-of-game
-
-- Regulation game: **3 innings** (`GAME_INNINGS` in `include/config.h`)
-- The game stops after the bottom of the 3rd (no 4th inning)
-- On the final play, the result shows normally; the button reads **End Game**
-- Wrap-up: iPixel score banner twice → reset game state → clear player tokens → disconnect phones from Wi-Fi → logo attract GIF pushed again
-
-### Captive portal routes
-
-`/generate_204`, `/hotspot-detect.html`, `/connecttest.txt`, `/canonical.html`, `/ncsi.txt`, `/fwlink`, `/success.txt`, `/favicon.ico`
-
----
-
-## Phone web UI
-
-Design source: `src/index.html`. Background art: `src/phone_*.jpg` (~85 KB total, JPEG).
-
-After editing HTML or JPGs, regenerate embedded assets (PlatformIO does this automatically before build):
+Edit `upload_port` in `platformio.ini` if your serial device path differs, then:
 
 ```bash
-python3 setup/generateWebAssets.py
 pio run -t upload
 ```
 
-The UI scales a fixed 953px-wide layout to the phone viewport. Screens:
+### Upload iPixel animations (one time)
 
-1. **Join** — header + Join Game button
-2. **Play** — scoreboard, field, PVP status, pitch/swing pickers, lock-in button
-3. **Result** — outcome text in the choice panel + Next Pitch (or **End Game** on the final play of inning 3)
-
----
-
-## Outcome lookup table
-
-Play results come from `setup/pitching-battle-outcomes.json` (81 pitch height/speed × swing height/timing combos, weighted responses).
-
-Regenerate the firmware lookup after editing the JSON:
+Power off the ESP32. Close the iPixel Color phone app. With the iPixel on and advertising:
 
 ```bash
-python3 setup/generateOutcomes.py
-```
-
-This writes `include/pitch_outcomes_data.h`. The generator also injects a **10% strike** and **5% ball** into each hit/out combo (existing play weights scaled to 85%). Walks and strikeouts are still derived from the count after a ball/strike outcome, not from the JSON table.
-
----
-
-## iPixel
-
-### Display flow
-
-1. **Boot / game over** — connect over BLE, push logo GIF directly from firmware (`save_slot=0`, not stored); loops until the first at-bat of a session resolves
-2. **Result** — play the matching GIF slot, or scroll text for walk/strikeout
-3. **Return** — after 5 seconds (`IPIXEL_SCOREBOARD_RETURN_MS`), push live scoreboard PNG to slot 5, call `show_slot(5)`
-
-### Slot assignments
-
-| Slot | Content |
-| ---- | ------- |
-| 1 | Homerun |
-| 2 | Triple |
-| 3 | Double |
-| 4 | Single |
-| 5 | **Live scoreboard** (firmware, each turn) |
-| 6 | Ball |
-| 7 | Foul |
-| 8 | Fly out |
-| 9 | Ground out |
-| 10 | Strike |
-
-Logo is embedded via `setup/generateLogoGif.py` → `include/ipixel_logo_gif.h` and pushed as pre-built BLE frames (two windows, ~13 KB total). It does not occupy a stored slot. Walk and strikeout use scroll-text BLE frames, not stored slots.
-
-Regenerate the embedded logo after editing `setup/logo.gif`:
-
-```bash
-python3 setup/generateLogoGif.py
-```
-
-(`generateWebAssets.py` runs this automatically before each PlatformIO build.)
-
-### Mac setup scripts
-
-Close the iPixel Color app and power off the ESP32 before running (one BLE connection at a time):
-
-```bash
+pip install pypixelcolor bleak
 python3 setup/storeImages.py
-python3 setup/generateScrollTextPayloads.py   # after changing walk/strikeout text
 ```
 
-`storeImages.py` scans for `LED_BLE_*`, uploads GIFs from `setup/` to slots 1–4 and 6–10, and skips slot 5 (live scoreboard).
+### Play
 
-### Power-on sequence
-
-1. Turn on the iPixel and wait for it to finish booting
-2. Close the iPixel Color phone app
-3. Power on or flash the ESP32
-4. ESP32 scans for BLE (~18 s boot window), then keeps retrying every 30 s until the logo appears
-5. Logo should hold steady on the iPixel once connected
-
-| Screen state | Meaning |
-| ------------ | ------- |
-| Blinking blue link icon | iPixel advertising — good time to connect |
-| Animations cycling, no link icon | Not advertising; ESP32 cannot connect |
-| Logo holding steady | ESP32 connected, logo GIF pushed |
-
-If the iPixel is stuck cycling animations, reset from a Mac (slot 10 is strike, not logo):
-
-```bash
-python3 -m pypixelcolor --scan
-python3 -m pypixelcolor -a <your-device-id> -c show_slot 1
-```
-
-Then power-cycle the ESP32 while the iPixel is idle.
-
-### Configuration
-
-Key flags in `include/config.h`:
-
-| Flag | Purpose |
-| ---- | ------- |
-| `ENABLE_IPIXEL` | Set `0` to disable BLE |
-| `IPIXEL_DEVICE_PREFIX` | Scan filter, default `LED_BLE_` |
-| `IPIXEL_MAC` | Optional fixed MAC; empty = scan by name |
-| `IPIXEL_RAW_WRITE_HANDLE` | Raw ATT handle for commands (`0x0006` on this unit) |
-| `IPIXEL_SCOREBOARD_RETURN_MS` | Delay before scoreboard return (default 5000 ms) |
-| `GAME_INNINGS` | Regulation inning count (default 3) |
-| `IPIXEL_DIAGNOSTIC_MODE` | `0` = game, `1` = BLE slot test, `2` = Wi-Fi + slot test |
-
-See [project_history.md](project_history.md) for the full diagnostic test order used during bring-up.
+1. Power on the iPixel, then the ESP32.
+2. On each phone: join Wi-Fi **PitchBattle** / password **pitchbattle**
+3. Open the captive portal, or go to **http://192.168.4.1**
+4. Tap **Join Game** (Home first, then Away).
 
 ---
 
-## Roadmap
+## Documentation
 
-### Game rules
-
-- [ ] Double plays, sacrifice flies, and similar situational rules
-- [ ] Full nine-inning game polish (extra innings, mercy rules, etc.)
-
-### UI and logic
-
-- [ ] **New Game** button in the phone UI (wire to `/api/new-game`)
-- [ ] Outcome text tuning and additional flavor responses
-
-### Infrastructure
-
-- [ ] Player reconnection grace period (token persists on reload, but no timeout handling yet)
-- [ ] Escape `resultText` in JSON responses
-
-**Done when:** A full game can be played start to finish with correct scoring, inning flow, and a polished phone UI.
+| Document | Contents |
+| -------- | -------- |
+| [details.md](details.md) | API, iPixel slots, config flags, project layout, developer notes |
+| [project_history.md](project_history.md) | How the project evolved and bring-up notes |
 
 ---
 
-## Project Layout
+## License
 
-```text
-pitch_battle/
-  include/
-    config.h                       Wi-Fi, TFT pins, iPixel settings
-    esp_screen_gif.h                 Round LCD GIF (generated)
-    ipixel.h                         iPixel BLE API
-    ipixel_logo_gif.h                Logo GIF BLE frames (generated, direct push)
-    ipixel_scroll_text.h             Pre-encoded walk/strikeout scroll frames
-    phone_assets.h                   Phone JPG slices (generated)
-    pitch_outcomes.h                 Outcome lookup API
-    pitch_outcomes_data.h            Outcome table (generated)
-    scoreboard.h                     Dynamic scoreboard render API
-    web_index.h                      Embedded phone HTML (generated)
-  setup/
-    storeImages.py                   Upload GIF slot assets (Mac)
-    generateScrollTextPayloads.py    Regenerate scroll-text BLE payloads
-    generateOutcomes.py              JSON → pitch_outcomes_data.h
-    generateWebAssets.py             index.html + JPGs → firmware headers
-    generateLogoGif.py               logo.gif → ipixel_logo_gif.h (direct push)
-    generateEspScreenGif.py          esp_screen.gif → esp_screen_gif.h
-    renderScoreboardTest.py          Local scoreboard PNG preview
-    pitching-battle-outcomes.json    Weighted play outcomes
-    esp_screen.gif                   Round LCD attract loop
-    *.gif                            GIF assets for iPixel slots
-  src/
-    index.html                       Phone UI source (edit this)
-    phone_*.jpg                      Phone UI background slices
-    main.cpp                         Wi-Fi, portal, game logic
-    ipixel.cpp                       iPixel BLE client
-    scoreboard.cpp                   96×16 scoreboard renderer and PNG encoder
-    pitch_outcomes.cpp               Outcome lookup
-    lcd_screen.cpp                   Round LCD GIF playback
-  assets/ipixel/                     Scoreboard template and test PNGs
-  project_history.md                 Completed milestones and bring-up notes
-  platformio.ini                     Board, libraries, pre-build web asset hook
-  LICENSE                            MIT
-```
+[MIT](LICENSE) — Copyright (c) 2026 Keith Kritselis

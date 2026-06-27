@@ -11,6 +11,8 @@ static constexpr Rgb COLOR_WHITE = {220, 235, 255};
 static constexpr Rgb COLOR_YELLOW = {255, 190, 35};
 static constexpr Rgb COLOR_CYAN = {40, 210, 255};
 static constexpr Rgb COLOR_RED = {255, 0, 0};
+static constexpr Rgb COLOR_RUNNER_AWAY = {35, 140, 255};
+static constexpr Rgb COLOR_RUNNER_HOME = {255, 0, 0};
 
 static uint8_t pixelBuffer[SCOREBOARD_RGB_BYTES];
 static uint8_t pngRawBuffer[SCOREBOARD_HEIGHT * (1 + SCOREBOARD_WIDTH * 3)];
@@ -174,8 +176,12 @@ static void fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, Rgb color) {
   }
 }
 
-static void drawBaseBox(uint8_t x, uint8_t y, bool occupied) {
-  fillRect(x, y, 2, 2, occupied ? COLOR_RED : COLOR_WHITE);
+static void drawBaseBox(uint8_t x, uint8_t y, bool occupied, Rgb teamColor) {
+  fillRect(x, y, 2, 2, occupied ? teamColor : COLOR_WHITE);
+}
+
+static Rgb runnerTeamColor(bool topHalf) {
+  return topHalf ? COLOR_RUNNER_AWAY : COLOR_RUNNER_HOME;
 }
 
 static void drawSingleDigit(uint8_t x, uint8_t y, uint8_t value, Rgb color) {
@@ -218,9 +224,10 @@ static void renderFramebuffer(const ScoreboardState &state) {
   drawSingleDigit(0, 5, state.strikes, COLOR_CYAN);
   drawSingleDigit(0, 10, state.outs, COLOR_YELLOW);
 
-  drawBaseBox(37, 1, state.runnerSecond);
-  drawBaseBox(43, 7, state.runnerFirst);
-  drawBaseBox(31, 7, state.runnerThird);
+  const Rgb runnerColor = runnerTeamColor(state.topHalf);
+  drawBaseBox(37, 1, state.runnerSecond, runnerColor);
+  drawBaseBox(43, 7, state.runnerFirst, runnerColor);
+  drawBaseBox(31, 7, state.runnerThird, runnerColor);
 
   drawScoreRow(2, state.awayInningRuns, state.awayScore, COLOR_CYAN);
   drawScoreRow(10, state.homeInningRuns, state.homeScore, COLOR_YELLOW);
