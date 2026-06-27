@@ -928,6 +928,11 @@ static bool ipixelPushDirectGifWindows(
     delay(120);
   }
 
+  if (sent) {
+    // Let the panel finish assembling multi-window GIF transfers before coex changes.
+    delay(300);
+  }
+
   if (ipixelWifiActive) {
     esp_coex_preference_set(ESP_COEX_PREFER_BALANCE);
     Serial.println("iPixel coex restored balance");
@@ -1193,7 +1198,8 @@ void ipixelLoop() {
     }
   }
 
-  if (!ipixelBurstActive && ipixelScoreboardPending && millis() >= ipixelScoreboardDueMs) {
+  if (!ipixelBurstActive && ipixelScoreboardPending && !ipixelAttractActive &&
+      millis() >= ipixelScoreboardDueMs) {
     ipixelScoreboardPending = false;
     Serial.println("iPixel returning to live scoreboard");
     if (!ipixelPushScoreboardImage()) {
