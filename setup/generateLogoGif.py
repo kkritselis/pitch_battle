@@ -7,9 +7,9 @@ from pathlib import Path
 from PIL import Image, ImageSequence
 from pypixelcolor.commands.send_image import _build_send_plan
 
-# iPixel GIF slots use ~100-500 ms per frame. logo.gif was exported with 5000 ms
-# frames, which makes the attract animation look frozen mid-play on the panel.
+# Motion frames play quickly; the final frame holds before the loop restarts.
 LOGO_FRAME_DURATION_MS = 150
+LOGO_HOLD_MS = 5000
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PATH = Path(__file__).resolve().parent / "logo.gif"
@@ -31,11 +31,17 @@ def format_byte_array(name: str, data: bytes) -> str:
 
 
 def normalize_logo_gif_bytes(source_path: Path) -> tuple[bytes, int]:
-    """Re-encode logo.gif with sane frame timing and infinite loop metadata."""
+    """Re-encode logo.gif with fast motion frames and a hold on the last frame."""
     img = Image.open(source_path)
     frames = [frame.copy() for frame in ImageSequence.Iterator(img)]
     if not frames:
         raise SystemExit(f"{source_path} has no GIF frames")
+
+    durations = [LOGO_FRAME_DURATION_MS] * len(frames)
+    durations[-1] = LOGO_HOLD_MS
+    for index, frame in enumerate(frames):
+        frame.info["duration"] = durations[index]
+        frame.info["disposal"] = 2
 
     output = BytesIO()
     frames[0].save(
@@ -43,7 +49,7 @@ def normalize_logo_gif_bytes(source_path: Path) -> tuple[bytes, int]:
         format="GIF",
         save_all=True,
         append_images=frames[1:],
-        duration=LOGO_FRAME_DURATION_MS,
+        duration=durations,
         loop=img.info.get("loop", 0),
         disposal=2,
         optimize=True,
@@ -91,7 +97,8 @@ def main() -> None:
 
     OUTPUT_PATH.write_text("\n".join(sections))
     print(
-        f"Wrote {OUTPUT_PATH} ({frame_count} frames @ {LOGO_FRAME_DURATION_MS} ms, "
+        f"Wrote {OUTPUT_PATH} ({frame_count} frames, "
+        f"{LOGO_FRAME_DURATION_MS} ms motion + {LOGO_HOLD_MS} ms hold, "
         f"{len(plan.windows)} windows, "
         f"{sum(len(w.data) for w in plan.windows)} bytes total)"
     )
